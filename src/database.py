@@ -54,9 +54,13 @@ class NoFapDB:
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder)
 
-    def update(self, uid=None, lastTimeFap=None):
+    def update(self, uid=None, lastTimeFap=None, newNickName=None):
         if uid is not None:
             self.data[uid].lastTimeFap = lastTimeFap
+            return
+        if newNickName is not None:
+            self.data[uid].username = newNickName
+            return
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder)
 
