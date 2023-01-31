@@ -96,6 +96,9 @@ async def process_simple_calendar(callback_query: types.CallbackQuery, callback_
 async def checkRating():
     for userStat in database.data.values():
         days = (datetime.now() - userStat.lastTimeFap).days
+        chat = await bot.get_chat(userStat.uid)
+        actual_nick = chat.username
+        database.update(userStat.uid, None, actual_nick)
         if days >= 0:
             if len(userStat.collectedMemes) == 0:
                 day_memes = database.cached_memes[0]
@@ -119,9 +122,6 @@ async def checkRating():
                 meme_pic=open(os.path.join("storage", "memes", new_meme), "rb")
                 await bot.send_photo(userStat.uid, meme_pic)
                 meme_pic.close()
-        chat = await bot.get_chat(userStat.uid)
-        actual_nick = chat.username
-        database.update(userStat.uid, None, actual_nick)
     database.update()
 
 async def sendCheckMessageBroadcast():
