@@ -119,6 +119,11 @@ async def checkRating():
                 meme_pic=open(os.path.join("storage", "memes", new_meme), "rb")
                 await bot.send_photo(userStat.uid, meme_pic)
                 meme_pic.close()
+        nickname = userStat.username
+        chat = await bot.get_chat(userStat.uid)
+        actual_nick = chat.username
+        if actual_nick != nickname:
+            userStat.username = actual_nick
     database.update()
 
 async def sendCheckMessageBroadcast():
