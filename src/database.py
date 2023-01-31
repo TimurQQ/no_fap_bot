@@ -55,7 +55,7 @@ class NoFapDB:
             json.dump(self.data, f, cls=EnhancedJSONEncoder)
 
     def update(self, uid=None, lastTimeFap=None, newNickName=None):
-        if uid is not None:
+        if lastTimeFap is not None:
             self.data[uid].lastTimeFap = lastTimeFap
             return
         if newNickName is not None:
