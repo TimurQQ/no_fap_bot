@@ -136,27 +136,18 @@ async def checkRating():
         database.update(userStat.uid, None, actual_nick)
         if days >= 0:
             if len(userStat.collectedMemes) == 0:
-                day_memes = database.cached_memes[0]
-                i = random.randrange(0, len(day_memes))
-                new_meme = day_memes[i]
-                userStat.collectedMemes.append(new_meme)
-                await bot.send_message(userStat.uid, f"Congratulations!!! You have collected 0-day meme.", reply_markup=menu_kb)
-                meme_pic=open(os.path.join("storage", "memes", new_meme), "rb")
-                await bot.send_photo(userStat.uid, meme_pic)
-                meme_pic.close()
+                new_day = 0
             else:
                 last_day = int(userStat.collectedMemes[-1].split()[1].split("_")[0])
                 new_day = min(last_day + 1, days)
                 if (last_day == new_day):
                     continue
-                day_memes = database.cached_memes[new_day]
-                i = random.randrange(0, len(day_memes))
-                new_meme = day_memes[i]
-                userStat.collectedMemes.append(new_meme) 
-                await bot.send_message(userStat.uid, f"Congratulations!!! You have collected {new_day}-day meme.", reply_markup=menu_kb)
-                meme_pic=open(os.path.join("storage", "memes", new_meme), "rb")
+            day_memes = database.cached_memes[new_day]
+            new_meme = random.choice(day_memes)
+            userStat.collectedMemes.append(new_meme)
+            await bot.send_message(userStat.uid, f"Congratulations!!! You have collected {new_day}-day meme.", reply_markup=menu_kb)
+            with open(os.path.join("storage", "memes", new_meme), "rb") as meme_pic:
                 await bot.send_photo(userStat.uid, meme_pic)
-                meme_pic.close()
     database.update()
 
 async def sendCheckMessageBroadcast():

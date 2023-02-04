@@ -20,14 +20,8 @@ class NoFapDB:
                 data = json.load(f)
                 for uid in data.keys():
                     user_data = data[uid]
-                    if "collectedMemes" not in user_data:
-                        memes = []
-                    else:
-                        memes = user_data["collectedMemes"]
-                    if "isBlocked" not in user_data:
-                        isBlocked = False
-                    else:
-                        isBlocked = user_data["isBlocked"]
+                    memes = user_data.get("collectedMemes", list())
+                    isBlocked = user_data.get("isBlocked", False)
                     self.data[int(uid)] = UserStat(
                         uid = user_data["uid"],
                         username = user_data["username"],
@@ -42,14 +36,6 @@ class NoFapDB:
                     self.cached_memes[day_of_file] = [file_name]
                 else:
                     self.cached_memes[day_of_file].append(file_name)
-
-    def makeSharedReport():
-        report = """Hello there. Bot is updating very quickly.
-        Notes:
-        1. Add some memes for 
-        
-        """
-        pass
 
     def getBlackList(self):
         self.data[1271420441].isBlocked = True
