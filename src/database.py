@@ -38,14 +38,14 @@ class NoFapDB:
                     self.cached_memes[day_of_file].append(file_name)
 
     def getBlackList(self):
-        self.data[1271420441].isBlocked = True
-        return {1271420441,}
+        self.data[930629580].isBlocked = True
+        return {930629580,}
 
     def __contains__(self, uid):
         return uid in self.data
 
     def addNewUser(self, uid, username, lastTimeFap):
-        self.data[uid] = UserStat(uid, username, lastTimeFap, list())
+        self.data[uid] = UserStat(uid, username, lastTimeFap, list(), False)
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder)
 
@@ -62,9 +62,10 @@ class NoFapDB:
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder)
 
-    def getTop10(self):
+    def getTop(self, page = 0):
         filtered_data = filter(lambda user: not user.isBlocked, self.data.values())
-        return sorted(filtered_data, key=lambda x: x.lastTimeFap)[:10]
+        sorted_data = sorted(filtered_data, key=lambda x: x.lastTimeFap)
+        return sorted_data[page*10:(page+1)*10]
 
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, obj):

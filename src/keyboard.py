@@ -2,6 +2,8 @@ from aiogram.types import ReplyKeyboardRemove, \
     ReplyKeyboardMarkup, KeyboardButton, \
     InlineKeyboardMarkup, InlineKeyboardButton
 
+from aiogram.utils.callback_data import CallbackData
+
 button_yes = KeyboardButton('Yes!')
 button_no  = KeyboardButton('No!')
 
@@ -23,3 +25,12 @@ button3 = KeyboardButton('Restart')
 menu_kb = ReplyKeyboardMarkup().row(
     button1, button2, button3
 )
+
+choosepage_cb = CallbackData('choosepage', 'direction', 'page')  # post:<action>:<amount>
+
+def getInlineSlider(num_page = 0):
+    inline_page_kb = InlineKeyboardMarkup().row(
+            InlineKeyboardButton('◀', callback_data=choosepage_cb.new(direction='back', page = num_page)),
+            InlineKeyboardButton('▶', callback_data=choosepage_cb.new(direction='next', page = num_page))
+        )
+    return inline_page_kb
