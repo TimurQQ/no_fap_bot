@@ -32,6 +32,7 @@ class BlackListMiddleware(BaseMiddleware):
             await bot.send_message(message.chat.id,
                 "Your statistics: \n" +
                 f"@{userStat.username} Stat: {datetime.now() - userStat.lastTimeFap}"
+                , reply_markup=types.ReplyKeyboardRemove()
             )
             raise CancelHandler()
 
