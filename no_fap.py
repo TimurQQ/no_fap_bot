@@ -39,7 +39,18 @@ class BlackListMiddleware(BaseMiddleware):
 fpath = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.append(fpath)
 
-@dp.message_handler(commands=['start', 'help'])
+@dp.message_handler(commands=['help'])
+async def show_help(message: types.Message):
+    await message.reply(
+        """Hi!\nI am No Fap Bot [created by @timtim2379]!\n
+Options:\n
+/start\n
+/help\n
+/stat\n
+/blacklist\n"""
+    )
+
+@dp.message_handler(commands=['start'])
 async def send_welcome(message: types.Message):
     chatId = message.chat.id
     if chatId not in database:
@@ -53,14 +64,10 @@ Options:\n
 /start\n
 /help\n
 /stat\n
-/test\n"""
+/blacklist\n"""
     )
 
     await message.reply("Choose your last fap day:", reply_markup=start_kb)
-
-@dp.message_handler(commands=['test'])
-async def show_buttons(message: types.Message):
-    await message.reply("Did you fap today?", reply_markup=reply_kb)
 
 @dp.message_handler(Text("Statistics"))
 @dp.message_handler(commands=['stat'])
@@ -73,6 +80,10 @@ async def show_stats(message: types.Message):
             for i in range(len(top10List))
          ])
     )
+
+@dp.message_handler(Text("Not now"))
+async def start_challenge_now(message: types.Message):
+    await message.reply("Ok, you nofap challenge begin now.", reply_markup=menu_kb)
 
 @dp.message_handler(Text(equals=["Yes!", "I'm guilty"], ignore_case=True))
 async def fapping_reply(message: types.Message):

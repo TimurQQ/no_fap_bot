@@ -10,9 +10,11 @@ reply_kb.add(button_no)
 reply_kb.add(button_yes)
 
 button_open_cal = KeyboardButton('Open Calendar')
+not_now_button = KeyboardButton('Not now')
 
 start_kb = ReplyKeyboardMarkup(resize_keyboard=True)
 start_kb.add(button_open_cal)
+start_kb.add(not_now_button)
 
 button1 = KeyboardButton('Statistics')
 button2 = KeyboardButton("I'm guilty")
