@@ -46,6 +46,9 @@ class NoFapDB:
         """
         pass
 
+    def getBlackList(self):
+        return {1271420441,}
+
     def __contains__(self, uid):
         return uid in self.data
 
@@ -53,6 +56,9 @@ class NoFapDB:
         self.data[uid] = UserStat(uid, username, lastTimeFap, list())
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder)
+
+    def getStatById(self, uid):
+        return self.data[uid]
 
     def update(self, uid=None, lastTimeFap=None, newNickName=None):
         if lastTimeFap is not None:

@@ -1,5 +1,7 @@
 from aiogram import Bot, types
 from aiogram.dispatcher import Dispatcher
+from aiogram.dispatcher.middlewares import BaseMiddleware
+from aiogram.dispatcher.handler import CancelHandler
 from aiogram.utils import executor
 from src.keyboard import reply_kb
 from src.keyboard import start_kb
@@ -18,7 +20,21 @@ random.seed(datetime.now().timestamp())
 bot = Bot(token='5839909444:AAG3LZJw6qFLNqkK0hZBiGsBE2yZmWg2qfw')
 dp = Dispatcher(bot)
 database = NoFapDB()
+blacklist = database.getBlackList()
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
+
+class BlackListMiddleware(BaseMiddleware):
+    def __init__(self):
+        super(BlackListMiddleware, self).__init__()
+
+    async def on_process_message(self, message: types.Message, data: dict):
+        if message.chat.id in blacklist:
+            userStat = database.getStatById(message.chat.id)
+            await bot.send_message(message.chat.id,
+                "Your statistics: \n" +
+                f"@{userStat.username} Stat: {datetime.now() - userStat.lastTimeFap}"
+            )
+            raise CancelHandler()
 
 fpath = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.append(fpath)
@@ -71,6 +87,14 @@ async def fapping_reply(message: types.Message):
 @dp.message_handler(Text(equals=["Open Calendar", "Restart"],ignore_case=True))
 async def nav_cal_handler(message: types.Message):
     await message.answer("Please select a date: ", reply_markup=await SimpleCalendar().start_calendar())
+
+@dp.message_handler(commands=['blacklist'])
+async def get_black_list(message: types.Message):
+    await message.answer("BlackList: \n" +
+        "\n".join([
+            f"@{(await bot.get_chat(userId)).username} is blocked" for userId in blacklist
+        ])
+    )
 
 @dp.callback_query_handler(simple_cal_callback.filter())
 async def process_simple_calendar(callback_query: types.CallbackQuery, callback_data: dict):
@@ -129,6 +153,7 @@ async def sendCheckMessageBroadcast():
         await bot.send_message(uid, "Did you fap today?", reply_markup=reply_kb)
 
 if __name__ == '__main__':
+    dp.middleware.setup(BlackListMiddleware())
     scheduler.add_job(sendCheckMessageBroadcast, "cron", day_of_week='mon-sun', hour=21, minute = 00)
     scheduler.add_job(checkRating, "interval", seconds = 60)
     scheduler.start()
