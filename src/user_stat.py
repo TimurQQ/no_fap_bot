@@ -7,3 +7,4 @@ class UserStat:
     username: str
     lastTimeFap: datetime
     collectedMemes: list
+    isBlocked: bool

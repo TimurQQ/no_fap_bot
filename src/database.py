@@ -24,11 +24,16 @@ class NoFapDB:
                         memes = []
                     else:
                         memes = user_data["collectedMemes"]
+                    if "isBlocked" not in user_data:
+                        isBlocked = False
+                    else:
+                        isBlocked = user_data["isBlocked"]
                     self.data[int(uid)] = UserStat(
                         uid = user_data["uid"],
                         username = user_data["username"],
                         lastTimeFap = dateutil.parser.isoparse(user_data["lastTimeFap"]),
-                        collectedMemes = memes
+                        collectedMemes = memes,
+                        isBlocked = isBlocked
                     )
         if (os.path.exists(memes_path)):
             for file_name in os.listdir(memes_path):
@@ -47,6 +52,7 @@ class NoFapDB:
         pass
 
     def getBlackList(self):
+        self.data[1271420441].isBlocked = True
         return {1271420441,}
 
     def __contains__(self, uid):
@@ -71,7 +77,8 @@ class NoFapDB:
             json.dump(self.data, f, cls=EnhancedJSONEncoder)
 
     def getTop10(self):
-        return sorted(self.data.values(), key=lambda x: x.lastTimeFap)[:10]
+        filtered_data = filter(lambda user: not user.isBlocked, self.data.values())
+        return sorted(filtered_data, key=lambda x: x.lastTimeFap)[:10]
 
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, obj):
