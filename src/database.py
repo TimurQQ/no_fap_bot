@@ -38,8 +38,8 @@ class NoFapDB:
                     self.cached_memes[day_of_file].append(file_name)
 
     def getBlackList(self):
-        self.data[930629580].isBlocked = True
-        return {930629580,}
+        self.data[1271420441].isBlocked = True
+        return {1271420441,}
 
     def __contains__(self, uid):
         return uid in self.data
