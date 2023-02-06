@@ -8,3 +8,4 @@ class UserStat:
     lastTimeFap: datetime
     collectedMemes: list
     isBlocked: bool
+    isWinner: bool

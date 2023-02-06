@@ -177,8 +177,13 @@ async def checkRating():
                 if (last_day == new_day):
                     continue
             if (new_day not in database.cached_memes):
+                if (userStat.isWinner):
+                    continue
+                database.update(userStat.uid, None, None, True)
                 await bot.send_message(userStat.uid, f"Not enough memes for you :(", reply_markup=menu_kb)
                 continue
+            else:
+                database.update(userStat.uid, None, None, False)
             day_memes = database.cached_memes[new_day]
             new_meme = random.choice(day_memes)
             userStat.collectedMemes.append(new_meme)

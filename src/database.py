@@ -22,12 +22,14 @@ class NoFapDB:
                     user_data = data[uid]
                     memes = user_data.get("collectedMemes", list())
                     isBlocked = user_data.get("isBlocked", False)
+                    isWinner = user_data.get("isWinner", False)
                     self.data[int(uid)] = UserStat(
                         uid = user_data["uid"],
                         username = user_data["username"],
                         lastTimeFap = dateutil.parser.isoparse(user_data["lastTimeFap"]),
                         collectedMemes = memes,
-                        isBlocked = isBlocked
+                        isBlocked = isBlocked, 
+                        isWinner = isWinner
                     )
         if (os.path.exists(memes_path)):
             for file_name in os.listdir(memes_path):
@@ -52,12 +54,15 @@ class NoFapDB:
     def getStatById(self, uid):
         return self.data[uid]
 
-    def update(self, uid=None, lastTimeFap=None, newNickName=None):
+    def update(self, uid=None, lastTimeFap=None, newNickName=None, winnerFlag=None):
         if lastTimeFap is not None:
             self.data[uid].lastTimeFap = lastTimeFap
             return
         if newNickName is not None:
             self.data[uid].username = newNickName
+            return
+        if winnerFlag is not None:
+            self.data[uid].isWinner = winnerFlag
             return
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder)
