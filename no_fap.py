@@ -7,6 +7,7 @@ from src.keyboard import reply_kb, start_kb, menu_kb, getInlineSlider
 from src.keyboard import choosepage_cb
 from src.database import NoFapDB
 from datetime import datetime
+from src.commands import Commands
 import os
 import sys
 from aiogram.dispatcher.filters import Text
@@ -20,6 +21,7 @@ bot = Bot(token='5839909444:AAG3LZJw6qFLNqkK0hZBiGsBE2yZmWg2qfw')
 dp = Dispatcher(bot)
 database = NoFapDB()
 blacklist = database.getBlackList()
+commands = Commands()
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 
 class BlackListMiddleware(BaseMiddleware):
@@ -39,18 +41,13 @@ class BlackListMiddleware(BaseMiddleware):
 fpath = os.path.join(os.path.dirname(__file__), 'src')
 sys.path.append(fpath)
 
-@dp.message_handler(commands=['help'])
+@dp.message_handler(commands=[commands.HelpCommand])
 async def show_help(message: types.Message):
     await message.reply(
-        """Hi!\nI am No Fap Bot [created by @timtim2379]!\n
-Options:\n
-/start\n
-/help\n
-/stat\n
-/blacklist\n"""
+        f"Hi!\nI am No Fap Bot [created by @timtim2379]!\nOptions:{commands.getAllCommands()}"
     )
 
-@dp.message_handler(commands=['start'])
+@dp.message_handler(commands=[commands.StartCommand])
 async def send_welcome(message: types.Message):
     chatId = message.chat.id
     if chatId not in database:
@@ -59,18 +56,13 @@ async def send_welcome(message: types.Message):
         database.addNewUser(chatId, username, datetime.now())
 
     await message.reply(
-        """Hi!\nI am No Fap Bot [created by @timtim2379]!\n
-Options:\n
-/start\n
-/help\n
-/stat\n
-/blacklist\n"""
+        f"Hi!\nI am No Fap Bot [created by @timtim2379]!\nOptions:{commands.getAllCommands()}"
     )
 
     await message.reply("Choose your last fap day:", reply_markup=start_kb)
 
 @dp.message_handler(Text("Statistics"))
-@dp.message_handler(commands=['stat'])
+@dp.message_handler(commands=[commands.StatisticsCommand])
 async def show_stats(message: types.Message):
     top10List = database.getTop()
     await bot.send_message(message.chat.id,
@@ -133,7 +125,7 @@ async def fapping_reply(message: types.Message):
 async def nav_cal_handler(message: types.Message):
     await message.answer("Please select a date: ", reply_markup=await SimpleCalendar().start_calendar())
 
-@dp.message_handler(commands=['blacklist'])
+@dp.message_handler(commands=[commands.BlacklistCommand])
 async def get_black_list(message: types.Message):
     await message.answer("BlackList: \n" +
         "\n".join([
