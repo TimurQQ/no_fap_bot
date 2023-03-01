@@ -59,8 +59,11 @@ async def show_help(message: types.Message):
 @dp.message_handler(IsAdminFilter(), commands=['ban'])
 async def ban_user(message: types.Message):
     global blacklist
-    whom = message.get_args().split()[0]
-    whom = whom.split("@")[-1]
+    args = message.get_args()
+    if (len(args) == 0):
+        await message.answer(f"Command args passes incorrectly")
+        return
+    whom = args.split()[0].split("@")[-1]
     uid = database.getUserIDFromNick(whom)
     if (uid is None):
         await message.answer(f"User with provided nickname doesn't exist")
@@ -72,8 +75,11 @@ async def ban_user(message: types.Message):
 @dp.message_handler(IsAdminFilter(), commands=['unban'])
 async def unban_user(message: types.Message):
     global blacklist
-    whom = message.get_args().split()[0]
-    whom = whom.split("@")[-1]
+    args = message.get_args()
+    if (len(args) == 0):
+        await message.answer(f"Command args passes incorrectly")
+        return
+    whom = args.split()[0].split("@")[-1]
     uid = database.getUserIDFromNick(whom)
     if (uid is None):
         await message.answer(f"User with provided nickname doesn't exist")
