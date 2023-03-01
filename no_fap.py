@@ -9,21 +9,27 @@ from src.database import NoFapDB
 from datetime import datetime
 from src.commands import Commands
 from config.config import BOT_TOKEN
+from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.dispatcher import FSMContext
 import os
 import sys
 from aiogram.dispatcher.filters import Text
 from aiogram_calendar import simple_cal_callback, SimpleCalendar
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import random
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 random.seed(datetime.now().timestamp())
 
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher(bot, storage=MemoryStorage())
 database = NoFapDB()
 blacklist = database.getBlackList()
 commands = Commands()
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
+
+class SuggestMeme(StatesGroup):
+    waitMeme = State()
 
 class BlackListMiddleware(BaseMiddleware):
     def __init__(self):
@@ -122,6 +128,23 @@ async def fapping_reply(message: types.Message):
 @dp.message_handler(Text("No!"))
 async def fapping_reply(message: types.Message):
     await message.reply("Good job, keep up the good work.", reply_markup=menu_kb)
+
+@dp.message_handler(Text("Suggest a meme"))
+async def process_suggestMemeUsecase(message: types.Message):
+    await SuggestMeme.waitMeme.set()
+    await message.reply("Please send your meme to this chat. We will consider it:\n🔽🔽🔽🔽🔽🔽🔽🔽")
+
+@dp.message_handler(content_types=['photo'],state=SuggestMeme.waitMeme)
+async def processSuggestedMeme(message: types.Message, state: FSMContext):
+    uid = message.chat.id
+    userSuggestions = os.path.join("storage", "suggestions", str(uid))
+    if not os.path.exists(userSuggestions):
+        os.makedirs(userSuggestions)
+    countSuggestions = len(os.listdir(userSuggestions))
+    await message.photo[-1].download(destination_file=os.path.join(userSuggestions, f'{countSuggestions + 1}.jpg'))
+    await message.reply("Good meme! Thanks. You can continue to use our bot. \
+                        Tell your friends about it!\nhttps://t.me/nofap_challenge_bot")
+    await state.finish()
 
 @dp.message_handler(Text(equals=["Open Calendar", "Restart"],ignore_case=True))
 async def nav_cal_handler(message: types.Message):

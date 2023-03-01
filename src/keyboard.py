@@ -22,9 +22,11 @@ button1 = KeyboardButton('Statistics')
 button2 = KeyboardButton("I'm guilty")
 button3 = KeyboardButton('Restart')
 
-menu_kb = ReplyKeyboardMarkup().row(
+buttonSuggest = KeyboardButton('Suggest a meme')
+
+menu_kb = ReplyKeyboardMarkup(resize_keyboard=True).row(
     button1, button2, button3
-)
+).insert(buttonSuggest)
 
 choosepage_cb = CallbackData('choosepage', 'direction', 'page')  # post:<action>:<amount>
 
