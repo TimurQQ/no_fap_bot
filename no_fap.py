@@ -8,6 +8,7 @@ from src.keyboard import choosepage_cb
 from src.database import NoFapDB
 from datetime import datetime
 from src.commands import Commands
+from config.config import BOT_TOKEN
 import os
 import sys
 from aiogram.dispatcher.filters import Text
@@ -17,7 +18,7 @@ import random
 
 random.seed(datetime.now().timestamp())
 
-bot = Bot(token='5839909444:AAG3LZJw6qFLNqkK0hZBiGsBE2yZmWg2qfw')
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(bot)
 database = NoFapDB()
 blacklist = database.getBlackList()
@@ -38,8 +39,9 @@ class BlackListMiddleware(BaseMiddleware):
             )
             raise CancelHandler()
 
-fpath = os.path.join(os.path.dirname(__file__), 'src')
-sys.path.append(fpath)
+srcPath = os.path.join(os.path.dirname(__file__), 'src')
+configPath = os.path.join(os.path.dirname(__file__), 'config')
+sys.path.extend([srcPath, configPath])
 
 @dp.message_handler(commands=[commands.HelpCommand])
 async def show_help(message: types.Message):
