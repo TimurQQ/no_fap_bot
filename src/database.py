@@ -49,7 +49,7 @@ class NoFapDB:
     def addNewUser(self, uid, username, lastTimeFap):
         self.data[uid] = UserStat(uid, username, lastTimeFap, list(), False)
         with open(self.file_storage_path, "w") as f:
-            json.dump(self.data, f, cls=EnhancedJSONEncoder)
+            json.dump(self.data, f, cls=EnhancedJSONEncoder, indent=4)
 
     def getStatById(self, uid):
         return self.data[uid]
@@ -65,7 +65,7 @@ class NoFapDB:
             self.data[uid].isWinner = winnerFlag
             return
         with open(self.file_storage_path, "w") as f:
-            json.dump(self.data, f, cls=EnhancedJSONEncoder)
+            json.dump(self.data, f, cls=EnhancedJSONEncoder, indent=4)
 
     def getTop(self, page = 0):
         filtered_data = filter(lambda user: not user.isBlocked, self.data.values())
