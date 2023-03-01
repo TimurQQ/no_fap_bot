@@ -8,6 +8,7 @@ from src.keyboard import choosepage_cb
 from src.database import NoFapDB
 from datetime import datetime
 from src.commands import Commands
+from src.admin import IsAdminFilter
 from config.config import BOT_TOKEN
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
@@ -54,6 +55,32 @@ async def show_help(message: types.Message):
     await message.reply(
         f"Hi!\nI am No Fap Bot [created by @timtim2379]!\nOptions:{commands.getAllCommands()}"
     )
+
+@dp.message_handler(IsAdminFilter(), commands=['ban'])
+async def ban_user(message: types.Message):
+    global blacklist
+    whom = message.get_args().split()[0]
+    whom = whom.split("@")[-1]
+    uid = database.getUserIDFromNick(whom)
+    if (uid is None):
+        await message.answer(f"User with provided nickname doesn't exist")
+        return
+    database.update(uid, bannedFlag=True)
+    blacklist = database.getBlackList()
+    await message.answer(f"User with nick @{whom} was banned by you :)")
+
+@dp.message_handler(IsAdminFilter(), commands=['unban'])
+async def unban_user(message: types.Message):
+    global blacklist
+    whom = message.get_args().split()[0]
+    whom = whom.split("@")[-1]
+    uid = database.getUserIDFromNick(whom)
+    if (uid is None):
+        await message.answer(f"User with provided nickname doesn't exist")
+        return
+    database.update(uid, bannedFlag=False)
+    blacklist = database.getBlackList()
+    await message.answer(f"User with nick @{whom} was unbanned by you :)")
 
 @dp.message_handler(commands=[commands.StartCommand])
 async def send_welcome(message: types.Message):
@@ -192,7 +219,7 @@ async def checkRating():
         days = (datetime.now() - userStat.lastTimeFap).days
         chat = await bot.get_chat(userStat.uid)
         actual_nick = chat.username
-        database.update(userStat.uid, None, actual_nick)
+        database.update(userStat.uid, newNickName=actual_nick)
         if days >= 0:
             if len(userStat.collectedMemes) == 0:
                 new_day = 0
@@ -204,11 +231,11 @@ async def checkRating():
             if (new_day not in database.cached_memes):
                 if (userStat.isWinner):
                     continue
-                database.update(userStat.uid, None, None, True)
+                database.update(userStat.uid, winnerFlag=True)
                 await bot.send_message(userStat.uid, f"Not enough memes for you :(", reply_markup=menu_kb)
                 continue
             else:
-                database.update(userStat.uid, None, None, False)
+                database.update(userStat.uid, winnerFlag=False)
             day_memes = database.cached_memes[new_day]
             new_meme = random.choice(day_memes)
             userStat.collectedMemes.append(new_meme)

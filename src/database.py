@@ -40,8 +40,8 @@ class NoFapDB:
                     self.cached_memes[day_of_file].append(file_name)
 
     def getBlackList(self):
-        self.data[1271420441].isBlocked = True
-        return {1271420441,}
+        bannedUIDs = map(lambda item: item[0], filter(lambda uStat: uStat[1].isBlocked, self.data.items()))
+        return set(bannedUIDs)
 
     def __contains__(self, uid):
         return uid in self.data
@@ -54,7 +54,15 @@ class NoFapDB:
     def getStatById(self, uid):
         return self.data[uid]
 
-    def update(self, uid=None, lastTimeFap=None, newNickName=None, winnerFlag=None):
+    def getUserIDFromNick(self, nickname):
+        filtered = list(filter(lambda uStat: uStat[1].username == nickname, self.data.items()))
+        if (len(filtered) == 0):
+            return None
+        firstFound = filtered[0]
+        uid = firstFound[0]
+        return uid
+
+    def update(self, uid=None, lastTimeFap=None, newNickName=None, winnerFlag=None, bannedFlag=None):
         if lastTimeFap is not None:
             self.data[uid].lastTimeFap = lastTimeFap
             return
@@ -63,6 +71,9 @@ class NoFapDB:
             return
         if winnerFlag is not None:
             self.data[uid].isWinner = winnerFlag
+            return
+        if bannedFlag is not None:
+            self.data[uid].isBlocked = bannedFlag
             return
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder, indent=4)
