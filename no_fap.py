@@ -135,6 +135,13 @@ async def process_suggestMemeUsecase(message: types.Message):
     await SuggestMeme.waitMeme.set()
     await message.reply("Please send your meme to this chat. We will consider it:\n🔽🔽🔽🔽🔽🔽🔽🔽")
 
+@dp.message_handler(lambda message: message.content_type not in ['photo'], state=SuggestMeme.waitMeme)
+async def process_invalid_meme(message: types.Message, state: FSMContext):
+    await bot.send_message(message.chat.id, "This not a meme, btw")
+    await bot.send_message(message.chat.id, "You can continue to use our bot. \
+                           \nTo suggest meme you can push button again")
+    await state.finish()
+
 @dp.message_handler(content_types=['photo'],state=SuggestMeme.waitMeme)
 async def processSuggestedMeme(message: types.Message, state: FSMContext):
     uid = message.chat.id
