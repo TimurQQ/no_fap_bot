@@ -5,6 +5,7 @@ class Commands:
         self.StartCommand = "start"
         self.StatisticsCommand = "stat"
         self.BlacklistCommand = "blacklist"
+        self.SuggestMemeCommand = "suggest_meme"
 
     def getAllCommands(self) -> str:
         return "".join(map(lambda x: f"\n/{x}", self.__dict__.values()))

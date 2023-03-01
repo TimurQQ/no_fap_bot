@@ -130,6 +130,7 @@ async def fapping_reply(message: types.Message):
     await message.reply("Good job, keep up the good work.", reply_markup=menu_kb)
 
 @dp.message_handler(Text("Suggest a meme"))
+@dp.message_handler(commands=[commands.SuggestMemeCommand])
 async def process_suggestMemeUsecase(message: types.Message):
     await SuggestMeme.waitMeme.set()
     await message.reply("Please send your meme to this chat. We will consider it:\n🔽🔽🔽🔽🔽🔽🔽🔽")
