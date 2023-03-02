@@ -1,7 +1,7 @@
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.dispatcher.handler import CancelHandler
 from aiogram import types
-from database import database, blacklist
+from database import database
 from datetime import datetime
 
 class BlackListMiddleware(BaseMiddleware):
@@ -9,7 +9,7 @@ class BlackListMiddleware(BaseMiddleware):
         super(BlackListMiddleware, self).__init__()
 
     async def on_process_message(self, message: types.Message, data: dict):
-        if message.chat.id in blacklist:
+        if message.chat.id in database.getBlackList():
             userStat = database.getStatById(message.chat.id)
             await message.answer(
                 "Your statistics: \n" +

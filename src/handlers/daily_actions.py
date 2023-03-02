@@ -3,7 +3,7 @@ from aiogram import types
 from aiogram.dispatcher.filters import Text
 from datetime import datetime
 from aiogram.utils import exceptions
-from database import database, blacklist
+from database import database
 from src.keyboard import reply_kb, menu_kb
 import random
 import os
@@ -55,7 +55,7 @@ async def checkRating():
 
 async def sendCheckMessageBroadcast():
     for uid in database.data:
-        if uid in blacklist:
+        if uid in database.getBlackList():
             await bot.send_message(uid,
                 "You are no longer participating in the challenge. \nBut no one forbids collecting memes :)",
                 reply_markup=types.ReplyKeyboardRemove()
