@@ -1,3 +1,2 @@
 from .commands import Commands
-
-commands = Commands()
+print("Import commands")

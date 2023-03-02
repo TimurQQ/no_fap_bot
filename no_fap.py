@@ -2,6 +2,7 @@ from aiogram import types
 from aiogram.utils import executor
 from datetime import datetime
 from dispatcher import dp, bot
+from src import handlers as handlers
 from database import database
 from commands import commands
 from src.keyboard import start_kb

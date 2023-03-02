@@ -1,5 +1,4 @@
 import logging
-
 from aiogram import Bot, Dispatcher
 from config.config import BOT_TOKEN
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
