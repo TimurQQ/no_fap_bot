@@ -47,7 +47,7 @@ class NoFapDB:
         return uid in self.data
 
     def addNewUser(self, uid, username, lastTimeFap):
-        self.data[uid] = UserStat(uid, username, lastTimeFap, list(), False)
+        self.data[uid] = UserStat(uid, username, lastTimeFap, list(), False, False)
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder, indent=4)
 
