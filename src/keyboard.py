@@ -28,11 +28,11 @@ menu_kb = ReplyKeyboardMarkup(resize_keyboard=True).row(
     button1, button2, button3
 ).insert(buttonSuggest)
 
-choosepage_cb = CallbackData('choosepage', 'direction', 'page')  # post:<action>:<amount>
+choosepage_cb = CallbackData('choosepage', 'direction', 'caller', 'page')  # post:<action>:<amount>
 
-def getInlineSlider(num_page = 0):
+def getInlineSlider(num_page = 0, caller = -1):
     inline_page_kb = InlineKeyboardMarkup().row(
-            InlineKeyboardButton('◀', callback_data=choosepage_cb.new(direction='back', page = num_page)),
-            InlineKeyboardButton('▶', callback_data=choosepage_cb.new(direction='next', page = num_page))
+            InlineKeyboardButton('◀', callback_data=choosepage_cb.new(direction='back', page = num_page, caller = caller)),
+            InlineKeyboardButton('▶', callback_data=choosepage_cb.new(direction='next', page = num_page, caller = caller))
         )
     return inline_page_kb

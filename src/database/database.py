@@ -78,10 +78,17 @@ class NoFapDB:
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder, indent=4)
 
-    def getTop(self, page = 0):
+    def getTop(self, page = 0, caller=-1):
         filtered_data = filter(lambda user: not user.isBlocked, self.data.values())
         sorted_data = sorted(filtered_data, key=lambda x: x.lastTimeFap)
-        return sorted_data[page*10:(page+1)*10]
+        callerStat = None
+        for i in range(len(sorted_data)):
+            stat = sorted_data[i]
+            if stat.uid == caller:
+                callerStat = (i + 1, stat)
+                break
+        
+        return sorted_data[page*10:(page+1)*10], callerStat
 
 class EnhancedJSONEncoder(json.JSONEncoder):
         def default(self, obj):
