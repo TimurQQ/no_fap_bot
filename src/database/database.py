@@ -84,7 +84,7 @@ class NoFapDB:
         callerStat = None
         for i in range(len(sorted_data)):
             stat = sorted_data[i]
-            if stat.uid == caller:
+            if stat.uid == int(caller):
                 callerStat = (i + 1, stat)
                 break
         

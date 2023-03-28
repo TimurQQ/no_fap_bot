@@ -32,8 +32,7 @@ async def handle_next_page(query: types.CallbackQuery, callback_data: dict):
                 for i in range(len(topListPart))
             ]
         ) +
-         f"\n...\n\
-            {callerStat[0]}. @{callerStat[1].username} Stat: {datetime.now() - callerStat[1].lastTimeFap}",
+         f"\n...\n{callerStat[0]}. @{callerStat[1].username} Stat: {datetime.now() - callerStat[1].lastTimeFap}",
         query.from_user.id,
         query.message.message_id,
         reply_markup=getInlineSlider(next_page, callback_data["caller"])
@@ -52,8 +51,7 @@ async def handle_prev_page(query: types.CallbackQuery, callback_data: dict):
                 for i in range(len(topListPart))
             ]
         ) +
-         f"\n...\n\
-            {callerStat[0]}. @{callerStat[1].username} Stat: {datetime.now() - callerStat[1].lastTimeFap}",
+         f"\n...\n{callerStat[0]}. @{callerStat[1].username} Stat: {datetime.now() - callerStat[1].lastTimeFap}",
         query.from_user.id,
         query.message.message_id,
         reply_markup=getInlineSlider(prev_page, callback_data["caller"])
