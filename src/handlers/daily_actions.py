@@ -51,6 +51,7 @@ async def checkRating():
                     await bot.send_photo(userStat.uid, meme_pic)
         except exceptions.BotBlocked:
             print(f'Bot blocked by user @{chat.username}')
+            database.update(userStat.uid, bannedFlag=True)
     database.update()
 
 async def sendCheckMessageBroadcast():
