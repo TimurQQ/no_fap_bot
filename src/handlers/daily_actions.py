@@ -14,10 +14,13 @@ random.seed(datetime.now().timestamp())
 async def fapping_reply(message: types.Message):
     uid = message.chat.id
     database.update(uid, datetime.now())
+    database.user_contexts[uid].getting_response()
     await message.reply("Oh no, I'll have to reset your work.", reply_markup=menu_kb)
 
 @dp.message_handler(Text("No!"))
 async def fapping_reply(message: types.Message):
+    uid = message.chat.id
+    database.user_contexts[uid].getting_response()
     await message.reply("Good job, keep up the good work.", reply_markup=menu_kb)
 
 async def checkRating():
@@ -63,3 +66,4 @@ async def sendCheckMessageBroadcast():
             )
             continue
         await bot.send_message(uid, "Did you fap today?", reply_markup=reply_kb)
+        database.user_contexts[uid].daily_check()

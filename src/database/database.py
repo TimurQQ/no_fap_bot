@@ -3,6 +3,7 @@ import os
 from .user_stat import UserStat
 from datetime import datetime
 from datetime import date
+from .states import UserContext
 import dateutil.parser
 import dataclasses
 
@@ -13,6 +14,7 @@ class NoFapDB:
             memes_path = os.path.join("storage", "memes")
         ):
         self.data = dict()
+        self.user_contexts = dict()
         self.cached_memes = dict()
         self.file_storage_path = init_file
         if (os.path.exists(init_file)):
@@ -31,6 +33,10 @@ class NoFapDB:
                         isBlocked = isBlocked, 
                         isWinner = isWinner
                     )
+                    userContext = UserContext(int(uid))
+                    userContext.addRefreshCallback(callback=self.refresh_user)
+                    self.user_contexts[int(uid)] = userContext
+
         if (os.path.exists(memes_path)):
             for file_name in os.listdir(memes_path):
                 day_of_file = int(file_name.split()[1].split("_")[0])
@@ -53,6 +59,9 @@ class NoFapDB:
 
     def getStatById(self, uid):
         return self.data[uid]
+    
+    def refresh_user(self, uid):
+        self.data[uid].lastTimeFap = datetime.now()
 
     def getUserIDFromNick(self, nickname):
         filtered = list(filter(lambda uStat: uStat[1].username == nickname, self.data.items()))
