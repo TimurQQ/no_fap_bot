@@ -54,6 +54,9 @@ class NoFapDB:
 
     def addNewUser(self, uid, username, lastTimeFap):
         self.data[uid] = UserStat(uid, username, lastTimeFap, list(), False, False)
+        userContext = UserContext(int(uid))
+        userContext.addRefreshCallback(callback=self.refresh_user)
+        self.user_contexts[int(uid)] = userContext
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder, indent=4)
 
