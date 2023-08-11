@@ -16,7 +16,7 @@ async def show_stats(message: types.Message):
         "Statistics (1-10):\n" +
         "\n".join([
             f"{i+1}. @{top10List[i].username} Stat: {datetime.now() - top10List[i].lastTimeFap}"\
-            for i in range(len(top10List))
+            for i in range(len(top10List)) if top10List[i].username
          ]) +
          f"\n...\n{callerStat[0]}. @{callerStat[1].username} Stat: {datetime.now() - callerStat[1].lastTimeFap}",
             reply_markup = getInlineSlider(0, message.chat.id))
