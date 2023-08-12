@@ -23,7 +23,7 @@ async def fapping_reply(message: types.Message):
 
 @dp.message_handler(Text("No!"))
 async def fapping_reply(message: types.Message):
-    message_text = "Oh no, I'll have to reset your work."
+    message_text = "Good job, keep up the good work."
     username = message.chat.username
     if not username:
         message_text += "\n\nYou should set nickname for using our bot"

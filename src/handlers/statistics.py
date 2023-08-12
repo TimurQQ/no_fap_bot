@@ -29,7 +29,7 @@ async def handle_next_page(query: types.CallbackQuery, callback_data: dict):
         f"Statistics ({next_page*10 + 1}-{(next_page + 1)*10}):\n" +
         "\n".join([
                 f"{next_page*10 + i + 1}. @{topListPart[i].username} Stat: {datetime.now() - topListPart[i].lastTimeFap}"\
-                for i in range(len(topListPart))
+                for i in range(len(topListPart)) if topListPart[i].username
             ]
         ) +
          f"\n...\n{callerStat[0]}. @{callerStat[1].username} Stat: {datetime.now() - callerStat[1].lastTimeFap}",
@@ -48,7 +48,7 @@ async def handle_prev_page(query: types.CallbackQuery, callback_data: dict):
         f"Statistics ({prev_page*10 + 1}-{(prev_page + 1)*10}):\n" +
         "\n".join([
                 f"{prev_page*10 + i + 1}. @{topListPart[i].username} Stat: {datetime.now() - topListPart[i].lastTimeFap}"\
-                for i in range(len(topListPart))
+                for i in range(len(topListPart)) if topListPart[i].username
             ]
         ) +
          f"\n...\n{callerStat[0]}. @{callerStat[1].username} Stat: {datetime.now() - callerStat[1].lastTimeFap}",
