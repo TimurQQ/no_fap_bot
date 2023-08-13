@@ -7,12 +7,12 @@ from datetime import datetime
 from src.keyboard import getInlineSlider
 from src.keyboard import choosepage_cb
 
-def make_statistics_message(top10List, callerStat):
+def make_statistics_message(top10List, callerStat, page):
     return (
-        "Statistics (1-10):\n"
+        f"Statistics ({page*10 + 1}-{(page + 1)*10}):\n"
         + "\n".join(
             [
-                f"{i+1}. @{top10List[i].username} Stat: {datetime.now() - top10List[i].lastTimeFap}"
+                f"{page*10 + i + 1}. @{top10List[i].username} Stat: {datetime.now() - top10List[i].lastTimeFap}"
                 for i in range(len(top10List))
                 if top10List[i].username
             ]
@@ -27,7 +27,7 @@ async def show_stats(message: types.Message):
 
     await bot.send_message(
         message.chat.id,
-        make_statistics_message(top10List, callerStat),
+        make_statistics_message(top10List, callerStat, 0),
         reply_markup=getInlineSlider(0, message.chat.id),
     )
 
@@ -36,7 +36,7 @@ async def handle_next_page(query: types.CallbackQuery, callback_data: dict):
     next_page = int(callback_data["page"]) + 1
     topListPart, callerStat = database.getTop(page = next_page, caller=callback_data["caller"])
     await bot.edit_message_text(
-        make_statistics_message(topListPart, callerStat),
+        make_statistics_message(topListPart, callerStat, next_page),
         query.from_user.id,
         query.message.message_id,
         reply_markup=getInlineSlider(next_page, callback_data["caller"]),
@@ -49,7 +49,7 @@ async def handle_prev_page(query: types.CallbackQuery, callback_data: dict):
         return
     topListPart, callerStat = database.getTop(page = prev_page, caller=callback_data["caller"])
     await bot.edit_message_text(
-        make_statistics_message(topListPart, callerStat),
+        make_statistics_message(topListPart, callerStat, prev_page),
         query.from_user.id,
         query.message.message_id,
         reply_markup=getInlineSlider(prev_page, callback_data["caller"])
