@@ -7,14 +7,14 @@ from datetime import datetime
 from src.keyboard import getInlineSlider
 from src.keyboard import choosepage_cb
 
-def make_statistics_message(top10List, callerStat, page):
+def make_statistics_message(topListPart, callerStat, page):
     return (
         f"Statistics ({page*10 + 1}-{(page + 1)*10}):\n"
         + "\n".join(
             [
-                f"{page*10 + i + 1}. @{top10List[i].username} Stat: {datetime.now() - top10List[i].lastTimeFap}"
-                for i in range(len(top10List))
-                if top10List[i].username
+                f"{page*10 + i + 1}. @{topListPart[i].username} Stat: {datetime.now() - topListPart[i].lastTimeFap}"
+                for i in range(len(topListPart))
+                if topListPart[i].username
             ]
         )
         + f"\n...\n{callerStat[0]}. @{callerStat[1].username} Stat: {datetime.now() - callerStat[1].lastTimeFap}"
@@ -39,7 +39,7 @@ async def handle_next_page(query: types.CallbackQuery, callback_data: dict):
         make_statistics_message(topListPart, callerStat, next_page),
         query.from_user.id,
         query.message.message_id,
-        reply_markup=getInlineSlider(next_page, callback_data["caller"]),
+        reply_markup=getInlineSlider(next_page, callback_data["caller"])
     )
 
 @dp.callback_query_handler(choosepage_cb.filter(direction='back'))
