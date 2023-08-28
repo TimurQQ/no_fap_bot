@@ -91,7 +91,8 @@ class NoFapDB:
             json.dump(self.data, f, cls=EnhancedJSONEncoder, indent=4)
 
     def getTop(self, page = 0, caller=-1):
-        filtered_data = filter(lambda user: not user.isBlocked, self.data.values())
+        filter_func = lambda user: not user.isBlocked and (user.username or user.uid == int(caller))
+        filtered_data = filter(filter_func, self.data.values())
         sorted_data = sorted(filtered_data, key=lambda x: x.lastTimeFap)
         callerStat = None
         for i in range(len(sorted_data)):
