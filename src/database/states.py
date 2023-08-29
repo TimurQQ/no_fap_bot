@@ -6,12 +6,12 @@ class UserState:
         pass
 
 class PingUserState(UserState):
-    def __init__(self, default_count = 1, max_count = 3):
+    def __init__(self, default_count = 0, max_count = 3):
         self.count_pings = default_count
         self.max_count = max_count
     
     def ping(self, context):
-        if (self.count_pings >= self.max_count - 1):
+        if (self.count_pings >= self.max_count):
             context.change_state(RefreshUserState())
         self.count_pings += 1
 
