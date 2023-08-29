@@ -12,16 +12,24 @@ random.seed(datetime.now().timestamp())
 
 @dp.message_handler(Text(equals=["Yes!", "I'm guilty"], ignore_case=True))
 async def fapping_reply(message: types.Message):
+    message_text = "Oh no, I'll have to reset your work."
+    username = message.chat.username
+    if not username:
+        message_text += "\n\nYou should set nickname for using our bot"
     uid = message.chat.id
     database.update(uid, datetime.now())
     database.user_contexts[uid].getting_response()
-    await message.reply("Oh no, I'll have to reset your work.", reply_markup=menu_kb)
+    await message.reply(message_text, reply_markup=menu_kb)
 
 @dp.message_handler(Text("No!"))
 async def fapping_reply(message: types.Message):
+    message_text = "Good job, keep up the good work."
+    username = message.chat.username
+    if not username:
+        message_text += "\n\nYou should set nickname for using our bot"
     uid = message.chat.id
     database.user_contexts[uid].getting_response()
-    await message.reply("Good job, keep up the good work.", reply_markup=menu_kb)
+    await message.reply(message_text, reply_markup=menu_kb)
 
 async def checkRating():
     for userStat in database.data.values():
