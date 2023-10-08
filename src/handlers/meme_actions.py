@@ -5,6 +5,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from commands import commands
 import os
+from src.logger import noFapLogger
 
 class SuggestMeme(StatesGroup):
     waitMeme = State()
@@ -12,11 +13,13 @@ class SuggestMeme(StatesGroup):
 @dp.message_handler(Text("Suggest a meme"))
 @dp.message_handler(commands=[commands.SuggestMemeCommand])
 async def process_suggestMemeUsecase(message: types.Message):
+    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) has suggested meme")
     await SuggestMeme.waitMeme.set()
     await message.reply("Please send your meme to this chat. We will consider it:\n🔽🔽🔽🔽🔽🔽🔽🔽")
 
 @dp.message_handler(lambda message: message.content_type not in ['photo'], state=SuggestMeme.waitMeme)
 async def process_invalid_meme(message: types.Message, state: FSMContext):
+    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) has suggested not meme")
     await bot.send_message(message.chat.id, "This not a meme, btw")
     await bot.send_message(message.chat.id, "You can continue to use our bot. \
                            \nTo suggest meme you can push button again")
@@ -24,6 +27,7 @@ async def process_invalid_meme(message: types.Message, state: FSMContext):
 
 @dp.message_handler(content_types=['photo'],state=SuggestMeme.waitMeme)
 async def processSuggestedMeme(message: types.Message, state: FSMContext):
+    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) has suggested photo")
     uid = message.chat.id
     userSuggestions = os.path.join("storage", "suggestions", str(uid))
     if not os.path.exists(userSuggestions):

@@ -7,11 +7,13 @@ from database import database
 from src.keyboard import reply_kb, menu_kb
 import random
 import os
+from src.logger import noFapLogger
 
 random.seed(datetime.now().timestamp())
 
 @dp.message_handler(Text(equals=["Yes!", "I'm guilty"], ignore_case=True))
 async def fapping_reply(message: types.Message):
+    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) has said that he's guilty")
     message_text = "Oh no, I'll have to reset your work."
     username = message.chat.username
     if not username:
@@ -23,6 +25,7 @@ async def fapping_reply(message: types.Message):
 
 @dp.message_handler(Text("No!"))
 async def fapping_reply(message: types.Message):
+    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) has said 'No'")
     message_text = "Good job, keep up the good work."
     username = message.chat.username
     if not username:
@@ -32,6 +35,7 @@ async def fapping_reply(message: types.Message):
     await message.reply(message_text, reply_markup=menu_kb)
 
 async def checkRating():
+    noFapLogger.info(f"Check rating {database.data=}")
     for userStat in database.data.values():
         days = (datetime.now() - userStat.lastTimeFap).days
         chat = await bot.get_chat(userStat.uid)
@@ -66,7 +70,10 @@ async def checkRating():
     database.update()
 
 async def sendCheckMessageBroadcast():
+    noFapLogger.info("Send broadcast")
+    noFapLogger.info(f"{database.user_contexts=}")
     for uid in database.data:
+        noFapLogger.info(f"Process {uid} user")
         if uid in database.getBlackList():
             await bot.send_message(uid,
                 "You are no longer participating in the challenge. \nBut no one forbids collecting memes :)",

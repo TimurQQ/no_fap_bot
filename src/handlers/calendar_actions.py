@@ -5,6 +5,7 @@ from aiogram.dispatcher.filters import Text
 from datetime import datetime
 from database import database
 from src.keyboard import menu_kb
+from src.logger import noFapLogger
 
 @dp.callback_query_handler(simple_cal_callback.filter())
 async def process_simple_calendar(callback_query: types.CallbackQuery, callback_data: dict):
@@ -29,8 +30,10 @@ async def process_simple_calendar(callback_query: types.CallbackQuery, callback_
 
 @dp.message_handler(Text(equals=["Open Calendar", "Restart"],ignore_case=True))
 async def nav_cal_handler(message: types.Message):
+    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) open calendar")
     await message.answer("Please select a date: ", reply_markup=await SimpleCalendar().start_calendar())
 
 @dp.message_handler(Text("Not now"))
 async def start_challenge_now(message: types.Message):
+    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) select 'Not now'")
     await message.reply("Ok, you nofap challenge begin now.", reply_markup=menu_kb)
