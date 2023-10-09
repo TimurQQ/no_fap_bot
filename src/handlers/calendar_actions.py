@@ -30,10 +30,10 @@ async def process_simple_calendar(callback_query: types.CallbackQuery, callback_
 
 @dp.message_handler(Text(equals=["Open Calendar", "Restart"],ignore_case=True))
 async def nav_cal_handler(message: types.Message):
-    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) open calendar")
+    noFapLogger.info(f"User {message.chat.username}({message.from_user.id}) open calendar")
     await message.answer("Please select a date: ", reply_markup=await SimpleCalendar().start_calendar())
 
 @dp.message_handler(Text("Not now"))
 async def start_challenge_now(message: types.Message):
-    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) select 'Not now'")
+    noFapLogger.info(f"User {message.chat.username}({message.from_user.id}) select 'Not now'")
     await message.reply("Ok, you nofap challenge begin now.", reply_markup=menu_kb)

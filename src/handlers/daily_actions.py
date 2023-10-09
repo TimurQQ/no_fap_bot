@@ -13,7 +13,7 @@ random.seed(datetime.now().timestamp())
 
 @dp.message_handler(Text(equals=["Yes!", "I'm guilty"], ignore_case=True))
 async def fapping_reply(message: types.Message):
-    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) has said that he's guilty")
+    noFapLogger.info(f"User {message.from_user.username}({message.from_user.id}) has said that he's guilty")
     message_text = "Oh no, I'll have to reset your work."
     username = message.chat.username
     if not username:
@@ -25,7 +25,7 @@ async def fapping_reply(message: types.Message):
 
 @dp.message_handler(Text("No!"))
 async def fapping_reply(message: types.Message):
-    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) has said 'No'")
+    noFapLogger.info(f"User {message.chat.username}({message.from_user.id}) has said 'No'")
     message_text = "Good job, keep up the good work."
     username = message.chat.username
     if not username:

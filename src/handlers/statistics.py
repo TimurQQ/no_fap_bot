@@ -23,7 +23,7 @@ def make_statistics_message(topListPart, callerStat, page):
 @dp.message_handler(Text("Statistics"))
 @dp.message_handler(commands=[commands.StatisticsCommand])
 async def show_stats(message: types.Message):
-    noFapLogger.info(f"User {message.chat.username}({message.chat.id}) has asked users top")
+    noFapLogger.info(f"User {message.chat.username}({message.from_user.id}) has asked users top")
     top10List, callerStat = database.getTop(caller=message.chat.id)
 
     await bot.send_message(
@@ -35,7 +35,7 @@ async def show_stats(message: types.Message):
 @dp.callback_query_handler(choosepage_cb.filter(direction='next'))
 async def handle_next_page(query: types.CallbackQuery, callback_data: dict):
     next_page = int(callback_data["page"]) + 1
-    noFapLogger.info(f"User {query.message.chat.username}({query.message.chat.id}) has asked {next_page} page")
+    noFapLogger.info(f"User {query.message.chat.username}({query.message.from_user.id}) has asked {next_page} page")
     topListPart, callerStat = database.getTop(page = next_page, caller=callback_data["caller"])
     await bot.edit_message_text(
         make_statistics_message(topListPart, callerStat, next_page),
@@ -47,7 +47,7 @@ async def handle_next_page(query: types.CallbackQuery, callback_data: dict):
 @dp.callback_query_handler(choosepage_cb.filter(direction='back'))
 async def handle_prev_page(query: types.CallbackQuery, callback_data: dict):
     prev_page = int(callback_data["page"]) - 1
-    noFapLogger.info(f"User {query.message.chat.username}({query.message.chat.id}) has asked {next_page} page")
+    noFapLogger.info(f"User {query.message.chat.username}({query.message.from_user.id}) has asked {prev_page} page")
     if (prev_page < 0):
         return
     topListPart, callerStat = database.getTop(page = prev_page, caller=callback_data["caller"])

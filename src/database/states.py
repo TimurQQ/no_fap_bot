@@ -1,4 +1,5 @@
 from src.logger import noFapLogger
+import json
 
 class UserState:
     def __init__(self):
@@ -8,13 +9,16 @@ class UserState:
         pass
 
     def __repr__(self):
-        return "UserState"
+        return f"{type(self.__name__)}"
+
+    def _logInfo(self, uid, pong_flag = False):
+        noFapLogger.info(f"User {uid} in state: {self}")
 
 class PingUserState(UserState):
     def __init__(self, default_count = 0, max_count = 3):
         self.count_pings = default_count
         self.max_count = max_count
-    
+
     def ping(self, context):
         if (self.count_pings >= self.max_count):
             context.change_state(RefreshUserState())
@@ -22,16 +26,16 @@ class PingUserState(UserState):
 
     def pong(self):
         self.count_pings = max(0, self.count_pings - 1)
-    
+
     def state_action(self, context, pong_flag = False):
-        noFapLogger.info(f"State action for {context.uid} user. ({self=})")
+        super()._logInfo(context.uid, pong_flag)
         if (not pong_flag):
             self.ping(context)
         else:
             self.pong()
 
     def __repr__(self):
-        return f"(PingUserState {self.count_pings=}, {self.max_count=})"
+        return f"{type(self).__name__} {json.dumps(self.__dict__)}"
 
 class UserContext:
     def __init__(self, uid, default_state=PingUserState()):
@@ -57,7 +61,7 @@ class UserContext:
         self.refresh_callback(self.uid)
 
     def __repr__(self):
-        return f"(UserContext {self.uid=}, {self.state=}, {self.refresh_callback=})"
+        return f"{type(self).__name__} {json.dumps(self.__dict__)}"
 
 
 class RefreshUserState(UserState):
@@ -71,6 +75,3 @@ class RefreshUserState(UserState):
             context.change_state(PingUserState())
         else:
             context.refresh()
-
-    def __repr__(self):
-        return f"RefreshUserState"
