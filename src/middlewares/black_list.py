@@ -3,6 +3,14 @@ from aiogram.dispatcher.handler import CancelHandler
 from aiogram import types
 from database import database
 from datetime import datetime
+from src.logger import noFapLogger
+
+class LoggingMiddleware(BaseMiddleware):
+    def __init__(self):
+        super(LoggingMiddleware, self).__init__()
+
+    async def on_process_message(self, message: types.Message, data: dict):
+        noFapLogger.infoMessage(message)
 
 class BlackListMiddleware(BaseMiddleware):
     def __init__(self):

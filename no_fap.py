@@ -18,10 +18,8 @@ async def show_help(message: types.Message):
 
 @dp.message_handler(commands=[commands.StartCommand])
 async def send_welcome(message: types.Message):
-    noFapLogger.info(f"User {chat.username}({message.from_user.id}) has pressed /start")
     chatId = message.chat.id
     if chatId not in database:
-        noFapLogger.info(f"User {chat.username}({message.from_user.id}) not in database")
         chat = await bot.get_chat(chatId)
         username = chat.username
         database.addNewUser(chatId, username, datetime.now())

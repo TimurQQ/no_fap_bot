@@ -12,6 +12,10 @@ class NoFapLogger(object):
             file_handler.setFormatter(formatter)
 
             cls.logger.addHandler(file_handler)
+            def infoMessage(message):
+                cls.logger.info(f"{message.chat.username}({message.chat.id}): "
+                                + message.text if message.text else message.content_type)
+            setattr(cls.logger, 'infoMessage', infoMessage)
         return cls.logger
 
 noFapLogger = NoFapLogger()
