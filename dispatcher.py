@@ -4,7 +4,7 @@ from aiogram.bot.api import TelegramAPIServer
 from config.config import BOT_TOKEN
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from src.filters.admin import IsAdminFilter
-from src.middlewares.black_list import LoggingMiddleware
+from src.middlewares.logging import LoggingMiddleware
 from src.middlewares.black_list import BlackListMiddleware
 
 # Configure logging
