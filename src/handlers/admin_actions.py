@@ -2,7 +2,6 @@ from dispatcher import dp, bot
 from aiogram import types
 from database import database
 from commands import commands
-from src.logger import noFapLogger
 
 @dp.message_handler(is_admin=True, commands=['ban'])
 async def ban_user(message: types.Message):

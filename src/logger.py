@@ -1,8 +1,10 @@
+import aiogram
 import logging
-from logging import StreamHandler
+from src.constants import *
+import types
 
 class NoFapLogger(object):
-    _comandLogger = None
+    _commandLogger = None
     _cronLogger = None
 
     _instance = None
@@ -25,18 +27,18 @@ class NoFapLogger(object):
 
     def set_console_logging(self, consoleLogging):
         if not consoleLogging:
-            self._turnOnConsoleLogging(self._comandLogger)
+            self._turnOnConsoleLogging(self._commandLogger)
             self._turnOnConsoleLogging(self._cronLogger)
         else:
-            self._turnOffConsoleLogging(self._comandLogger)
+            self._turnOffConsoleLogging(self._commandLogger)
             self._turnOffConsoleLogging(self._cronLogger)
 
     def __new__(cls):
         if cls._instance is None:
-            cls._comandLogger = logging.getLogger("no_fap_logger")
-            cls._cronLogger = logging.getLogger('apscheduler.executors.default')
+            cls._commandLogger = logging.getLogger(LOGGER_NAME)
+            cls._cronLogger = logging.getLogger(SCHEDULE_LOGGER_NAME)
 
-            cls._comandLogger.setLevel(logging.INFO)
+            cls._commandLogger.setLevel(logging.INFO)
             cls._cronLogger.setLevel(logging.INFO)
 
             formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
@@ -45,18 +47,16 @@ class NoFapLogger(object):
             file_handler.setLevel(logging.INFO)
             file_handler.setFormatter(formatter)
 
-            cls._comandLogger.addHandler(file_handler)
+            cls._commandLogger.addHandler(file_handler)
             cls._cronLogger.addHandler(file_handler)
 
             cls._instance = super(NoFapLogger, cls).__new__(cls)
 
         return cls._instance
 
-    def info(self, text):
-        self._comandLogger.info(text)
+    def info(self, text: str):
+        self._commandLogger.info(text)
 
-    def info_message(self, message):
-        self._comandLogger.info(f"{message.chat.username}({message.chat.id}): "
-                                + message.text if message.text else message.content_type)
-
-noFapLogger = NoFapLogger()
+    def info_message(self, message: aiogram.types.Message):
+        self._commandLogger.info(f"{message.chat.username}({message.chat.id}): "
+                                 + message.text if message.text else message.content_type)

@@ -8,7 +8,7 @@ from commands import commands
 from src.keyboard import start_kb
 from sheduler import scheduler
 
-from src.logger import noFapLogger
+from logger import noFapLogger
 
 from argparse import ArgumentParser
 
@@ -37,7 +37,13 @@ def parse_args():
     parser.add_argument('-l', '--logs_output', type=str)
     args = parser.parse_args()
     loggingParam = args.logs_output
-    noFapLogger.set_console_logging(bool(loggingParam.lower()) if loggingParam else True)
+    if loggingParam:
+        if loggingParam.lower() == "true":
+            noFapLogger.set_console_logging(True)
+        else:
+            noFapLogger.set_console_logging(False)
+    else:
+        noFapLogger.set_console_logging(True)
 
 if __name__ == '__main__':
     noFapLogger.info("start bot")

@@ -7,7 +7,9 @@ from database import database
 from src.keyboard import reply_kb, menu_kb
 import random
 import os
-from src.logger import noFapLogger
+import json
+from logger import noFapLogger
+from src.database.database import EnhancedJSONEncoder
 
 random.seed(datetime.now().timestamp())
 
@@ -33,7 +35,7 @@ async def fapping_reply(message: types.Message):
     await message.reply(message_text, reply_markup=menu_kb)
 
 async def checkRating():
-    noFapLogger.info(f"Check rating {database.data=}")
+    # noFapLogger.info(f"Check rating {database.data=}")
     for userStat in database.data.values():
         days = (datetime.now() - userStat.lastTimeFap).days
         chat = await bot.get_chat(userStat.uid)
@@ -59,6 +61,7 @@ async def checkRating():
                 day_memes = database.cached_memes[new_day]
                 new_meme = random.choice(day_memes)
                 userStat.collectedMemes.append(new_meme)
+                noFapLogger.info(f"User {userStat.username}({userStat.uid}) gets meme")
                 await bot.send_message(userStat.uid, f"Congratulations!!! You have collected {new_day}-day meme.", reply_markup=menu_kb)
                 with open(os.path.join("storage", "memes", new_meme), "rb") as meme_pic:
                     await bot.send_photo(userStat.uid, meme_pic)
@@ -69,14 +72,16 @@ async def checkRating():
 
 async def sendCheckMessageBroadcast():
     noFapLogger.info("Send broadcast")
-    noFapLogger.info(f"{database.user_contexts=}")
+    noFapLogger.info(f"{json.dump(database.data, cls=EnhancedJSONEncoder, indent=4)}")
     for uid in database.data:
-        noFapLogger.info(f"Process {uid} user")
         if uid in database.getBlackList():
+            noFapLogger.info(f"Send daily question to user {database.data[uid].username}({uid}) who is in blacklist")
             await bot.send_message(uid,
                 "You are no longer participating in the challenge. \nBut no one forbids collecting memes :)",
                 reply_markup=types.ReplyKeyboardRemove()
             )
             continue
+        noFapLogger.info(f"Send daily question to user {database.data[uid].username}({uid}) who is not in blacklist")
+
         await bot.send_message(uid, "Did you fap today?", reply_markup=reply_kb)
         database.user_contexts[uid].daily_check()

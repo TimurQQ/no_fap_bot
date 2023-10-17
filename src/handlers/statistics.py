@@ -6,7 +6,7 @@ from database import database
 from datetime import datetime
 from src.keyboard import getInlineSlider
 from src.keyboard import choosepage_cb
-from src.logger import noFapLogger
+from logger import noFapLogger
 
 def make_statistics_message(topListPart, callerStat, page):
     return (

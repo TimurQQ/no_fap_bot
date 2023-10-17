@@ -5,7 +5,6 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.dispatcher import FSMContext
 from commands import commands
 import os
-from src.logger import noFapLogger
 
 class SuggestMeme(StatesGroup):
     waitMeme = State()

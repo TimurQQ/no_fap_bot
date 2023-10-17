@@ -5,7 +5,6 @@ from aiogram.dispatcher.filters import Text
 from datetime import datetime
 from database import database
 from src.keyboard import menu_kb
-from src.logger import noFapLogger
 
 @dp.callback_query_handler(simple_cal_callback.filter())
 async def process_simple_calendar(callback_query: types.CallbackQuery, callback_data: dict):

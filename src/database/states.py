@@ -1,4 +1,4 @@
-from src.logger import noFapLogger
+from logger import noFapLogger
 import json
 
 class UserState:
@@ -9,7 +9,7 @@ class UserState:
         pass
 
     def __repr__(self):
-        return f"{type(self.__name__)}"
+        return f"{type(self).__name__} {json.dumps(self.__dict__)}"
 
     def _logInfo(self, uid, pong_flag = False):
         noFapLogger.info(f"User {uid} in state: {self}")
@@ -28,14 +28,11 @@ class PingUserState(UserState):
         self.count_pings = max(0, self.count_pings - 1)
 
     def state_action(self, context, pong_flag = False):
-        super()._logInfo(context.uid, pong_flag)
+        self._logInfo(context.uid, pong_flag)
         if (not pong_flag):
             self.ping(context)
         else:
             self.pong()
-
-    def __repr__(self):
-        return f"{type(self).__name__} {json.dumps(self.__dict__)}"
 
 class UserContext:
     def __init__(self, uid, default_state=PingUserState()):
