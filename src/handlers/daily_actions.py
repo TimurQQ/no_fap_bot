@@ -9,7 +9,11 @@ import random
 import os
 import json
 from logger import noFapLogger
-from src.database.database import EnhancedJSONEncoder
+from src.utils.json_encoder import EnhancedJSONEncoder
+import shutil
+from src.constants import LOG_FILENAME
+from src.constants import BACKUP_FOLDER
+from datetime import date
 
 random.seed(datetime.now().timestamp())
 
@@ -35,7 +39,6 @@ async def fapping_reply(message: types.Message):
     await message.reply(message_text, reply_markup=menu_kb)
 
 async def checkRating():
-    # noFapLogger.info(f"Check rating {database.data=}")
     for userStat in database.data.values():
         days = (datetime.now() - userStat.lastTimeFap).days
         chat = await bot.get_chat(userStat.uid)
@@ -61,7 +64,7 @@ async def checkRating():
                 day_memes = database.cached_memes[new_day]
                 new_meme = random.choice(day_memes)
                 userStat.collectedMemes.append(new_meme)
-                noFapLogger.info(f"User {userStat.username}({userStat.uid}) gets meme")
+                noFapLogger.info(f"User {userStat.username}({userStat.uid}) gets meme {new_meme}")
                 await bot.send_message(userStat.uid, f"Congratulations!!! You have collected {new_day}-day meme.", reply_markup=menu_kb)
                 with open(os.path.join("storage", "memes", new_meme), "rb") as meme_pic:
                     await bot.send_photo(userStat.uid, meme_pic)
@@ -85,3 +88,7 @@ async def sendCheckMessageBroadcast():
 
         await bot.send_message(uid, "Did you fap today?", reply_markup=reply_kb)
         database.user_contexts[uid].daily_check()
+
+def makeBackup():
+    new_filename = LOG_FILENAME.split(".")[:-1] + str(date.today()) + ".log"
+    shutil.move(LOG_FILENAME, os.path.join("../../", BACKUP_FOLDER, new_filename))

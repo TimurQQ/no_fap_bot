@@ -35,7 +35,7 @@ class NoFapLogger(object):
 
     def __new__(cls):
         if cls._instance is None:
-            cls._commandLogger = logging.getLogger(LOGGER_NAME)
+            cls._commandLogger = logging.getLogger(NO_FAP_LOGGER_NAME)
             cls._cronLogger = logging.getLogger(SCHEDULE_LOGGER_NAME)
 
             cls._commandLogger.setLevel(logging.INFO)
@@ -43,7 +43,7 @@ class NoFapLogger(object):
 
             formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
-            file_handler = logging.FileHandler("no_fap_bot.log")
+            file_handler = logging.FileHandler(LOG_FILENAME)
             file_handler.setLevel(logging.INFO)
             file_handler.setFormatter(formatter)
 

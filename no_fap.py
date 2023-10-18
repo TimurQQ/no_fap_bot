@@ -33,7 +33,7 @@ async def send_welcome(message: types.Message):
     await message.reply("Choose your last fap day:", reply_markup=start_kb)
 
 def parse_args():
-    parser = ArgumentParser(prog='', description='', epilog='')
+    parser = ArgumentParser(prog='f"{__file__}"')
     parser.add_argument('-l', '--logs_output', type=str)
     args = parser.parse_args()
     loggingParam = args.logs_output
