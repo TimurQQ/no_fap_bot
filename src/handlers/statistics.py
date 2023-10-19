@@ -1,12 +1,10 @@
 from dispatcher import dp, bot
+from aiogram import types
 from aiogram.dispatcher.filters import Text
 from commands import commands
-from aiogram import types
 from database import database
 from datetime import datetime
-from src.keyboard import getInlineSlider
-from src.keyboard import choosepage_cb
-from logger import noFapLogger
+from src.keyboard import getInlineSlider, choosepage_cb
 
 def make_statistics_message(topListPart, callerStat, page):
     return (

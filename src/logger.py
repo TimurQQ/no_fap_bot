@@ -1,7 +1,9 @@
+import os
 import aiogram
 import logging
-from src.constants import *
-import types
+from logging.handlers import TimedRotatingFileHandler
+from datetime import time
+from src.constants import LOG_FILENAME, BACKUP_FOLDER, NO_FAP_LOGGER_NAME, SCHEDULER_LOGGER_NAME
 
 class NoFapLogger(object):
     _commandLogger = None
@@ -40,7 +42,8 @@ class NoFapLogger(object):
 
         formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
-        file_handler = logging.FileHandler(LOG_FILENAME)
+        file_handler = TimedRotatingFileHandler(os.path.join(BACKUP_FOLDER, LOG_FILENAME),
+                                                when="midnight", atTime=time(hour=22, minute=00))
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
 
@@ -64,18 +67,18 @@ class NoFapLogger(object):
         self._commandLogger.info(f"User {chat.username} ({chat.id}) send a message: "
                                  + text if text else message.content_type)
 
-    @staticmethod
-    def _removeHandlers(logger):
-        logger.handlers.clear()
+    # @staticmethod
+    # def _removeHandlers(logger):
+    #     logger.handlers.clear()
 
-    @staticmethod
-    def _addHandlers(logger, handlers):
-        for handler in handlers:
-            logger.addHandler(handler)
+    # @staticmethod
+    # def _addHandlers(logger, handlers):
+    #     for handler in handlers:
+    #         logger.addHandler(handler)
 
-    def turnOffLogging(self):
-        self._removeHandlers(self._commandLogger)
-        self._removeHandlers(self._cronLogger)
+    # def turnOffLogging(self):
+    #     self._removeHandlers(self._commandLogger)
+    #     self._removeHandlers(self._cronLogger)
 
-    def turnOnLogging(self):
-        self._createLoggers()
+    # def turnOnLogging(self):
+    #     self._createLoggers()

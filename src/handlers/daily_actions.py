@@ -1,7 +1,7 @@
 from dispatcher import dp, bot
 from aiogram import types
 from aiogram.dispatcher.filters import Text
-from datetime import datetime
+from datetime import date, datetime
 from aiogram.utils import exceptions
 from database import database
 from src.keyboard import reply_kb, menu_kb
@@ -11,10 +11,7 @@ import json
 from logger import noFapLogger
 from src.utils.json_encoder import LogJSONEncoder
 import shutil
-from src.constants import LOG_FILENAME
-from src.constants import BACKUP_FOLDER
-from datetime import date
-import logging
+from src.constants import LOG_FILENAME, BACKUP_FOLDER
 
 random.seed(datetime.now().timestamp())
 
@@ -92,17 +89,3 @@ async def sendCheckMessageBroadcast():
 
         await bot.send_message(uid, message, reply_markup=reply_kb)
         database.user_contexts[uid].daily_check()
-
-def makeBackup():
-    # hack for copying logs file. We turn off logger
-    noFapLogger.turnOffLogging()
-
-    # copy logs file
-    new_filename = "".join(LOG_FILENAME.split(".")[:-1]) + "_" + str(date.today()) + ".log"
-    shutil.move(LOG_FILENAME, os.path.join(BACKUP_FOLDER, new_filename))
-
-    # and turn on logger again
-    noFapLogger.turnOnLogging()
-
-    # create new empty log file because sometimes we can try access to unexisted file
-    open(LOG_FILENAME, 'a').close()

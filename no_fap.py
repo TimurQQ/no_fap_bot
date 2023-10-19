@@ -33,17 +33,14 @@ async def send_welcome(message: types.Message):
     await message.reply("Choose your last fap day:", reply_markup=start_kb)
 
 def parse_args():
-    parser = ArgumentParser(prog='f"{__file__}"')
+    parser = ArgumentParser(prog=f"{__file__}")
     parser.add_argument('-l', '--logs_output', type=str)
     args = parser.parse_args()
     loggingParam = args.logs_output
-    if loggingParam:
-        if loggingParam.lower() == "true":
-            noFapLogger.set_console_logging(True)
-        else:
-            noFapLogger.set_console_logging(False)
-    else:
+    if loggingParam and loggingParam.lower() == "true":
         noFapLogger.set_console_logging(True)
+    else:
+        noFapLogger.set_console_logging(False)
 
 if __name__ == '__main__':
     noFapLogger.info("start bot")
