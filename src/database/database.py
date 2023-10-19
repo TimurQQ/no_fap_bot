@@ -2,7 +2,6 @@ import json
 import os
 from .user_stat import UserStat
 from datetime import datetime
-from datetime import date
 from .states import UserContext
 import dateutil.parser
 from src.utils.json_encoder import EnhancedJSONEncoder

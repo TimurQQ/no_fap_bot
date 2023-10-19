@@ -11,8 +11,8 @@ class UserState:
     def __repr__(self):
         return f"{type(self).__name__} {json.dumps(self.__dict__)}"
 
-    def _logInfo(self, uid, pong_flag = False):
-        noFapLogger.info(f"User {uid} in state: {self}")
+    def _logInfo(self, context):
+        noFapLogger.info(f"User {context.uid} in state: {self}")
 
 class PingUserState(UserState):
     def __init__(self, default_count = 0, max_count = 3):
@@ -28,7 +28,7 @@ class PingUserState(UserState):
         self.count_pings = max(0, self.count_pings - 1)
 
     def state_action(self, context, pong_flag = False):
-        self._logInfo(context.uid, pong_flag)
+        self._logInfo(context)
         if (not pong_flag):
             self.ping(context)
         else:
@@ -66,8 +66,7 @@ class RefreshUserState(UserState):
         pass
 
     def state_action(self, context, pong_flag = False):
-        noFapLogger.info(f"State action for {context.uid} user. {self.state=},"
-                     f"{self=}")
+        self._logInfo(context)
         if (pong_flag):
             context.change_state(PingUserState())
         else:

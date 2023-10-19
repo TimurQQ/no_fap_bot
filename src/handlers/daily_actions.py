@@ -9,11 +9,12 @@ import random
 import os
 import json
 from logger import noFapLogger
-from src.utils.json_encoder import EnhancedJSONEncoder
+from src.utils.json_encoder import LogJSONEncoder
 import shutil
 from src.constants import LOG_FILENAME
 from src.constants import BACKUP_FOLDER
 from datetime import date
+import logging
 
 random.seed(datetime.now().timestamp())
 
@@ -75,20 +76,33 @@ async def checkRating():
 
 async def sendCheckMessageBroadcast():
     noFapLogger.info("Send broadcast")
-    noFapLogger.info(f"{json.dump(database.data, cls=EnhancedJSONEncoder, indent=4)}")
+    noFapLogger.info(f"{json.dump(database.data, cls=LogJSONEncoder, indent=4)}")
     for uid in database.data:
         if uid in database.getBlackList():
-            noFapLogger.info(f"Send daily question to user {database.data[uid].username}({uid}) who is in blacklist")
+            message = "You are no longer participating in the challenge. \nBut no one forbids collecting memes :)"
+            username = database.data[uid].username
+            noFapLogger.info(f"Send check message: {message} to user {username}({uid})")
             await bot.send_message(uid,
-                "You are no longer participating in the challenge. \nBut no one forbids collecting memes :)",
+                message,
                 reply_markup=types.ReplyKeyboardRemove()
             )
             continue
-        noFapLogger.info(f"Send daily question to user {database.data[uid].username}({uid}) who is not in blacklist")
+        message = "Did you fap today?"
+        noFapLogger.info(f"Send check message: {message} to user {username}({uid})")
 
-        await bot.send_message(uid, "Did you fap today?", reply_markup=reply_kb)
+        await bot.send_message(uid, message, reply_markup=reply_kb)
         database.user_contexts[uid].daily_check()
 
 def makeBackup():
-    new_filename = LOG_FILENAME.split(".")[:-1] + str(date.today()) + ".log"
-    shutil.move(LOG_FILENAME, os.path.join("../../", BACKUP_FOLDER, new_filename))
+    # hack for copying logs file. We turn off logger
+    noFapLogger.turnOffLogging()
+
+    # copy logs file
+    new_filename = "".join(LOG_FILENAME.split(".")[:-1]) + "_" + str(date.today()) + ".log"
+    shutil.move(LOG_FILENAME, os.path.join(BACKUP_FOLDER, new_filename))
+
+    # and turn on logger again
+    noFapLogger.turnOnLogging()
+
+    # create new empty log file because sometimes we can try access to unexisted file
+    open(LOG_FILENAME, 'a').close()

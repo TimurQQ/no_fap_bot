@@ -21,34 +21,35 @@ class NoFapLogger(object):
 
     @staticmethod
     def _turnOffConsoleLogging(logger):
-        # I have no idea how to turn off logging into console.
-        # Approach with remove StreamHandler from logger doesn't working
-        pass
+        logger.propagate = False
 
     def set_console_logging(self, consoleLogging):
-        if not consoleLogging:
+        if consoleLogging:
             self._turnOnConsoleLogging(self._commandLogger)
             self._turnOnConsoleLogging(self._cronLogger)
         else:
             self._turnOffConsoleLogging(self._commandLogger)
             self._turnOffConsoleLogging(self._cronLogger)
 
+    def _createLoggers(self):
+        self._commandLogger = logging.getLogger(NO_FAP_LOGGER_NAME)
+        self._cronLogger = logging.getLogger(SCHEDULER_LOGGER_NAME)
+
+        self._commandLogger.setLevel(logging.INFO)
+        self._cronLogger.setLevel(logging.INFO)
+
+        formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+
+        file_handler = logging.FileHandler(LOG_FILENAME)
+        file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(formatter)
+
+        self._commandLogger.addHandler(file_handler)
+        self._cronLogger.addHandler(file_handler)
+
     def __new__(cls):
         if cls._instance is None:
-            cls._commandLogger = logging.getLogger(NO_FAP_LOGGER_NAME)
-            cls._cronLogger = logging.getLogger(SCHEDULE_LOGGER_NAME)
-
-            cls._commandLogger.setLevel(logging.INFO)
-            cls._cronLogger.setLevel(logging.INFO)
-
-            formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-
-            file_handler = logging.FileHandler(LOG_FILENAME)
-            file_handler.setLevel(logging.INFO)
-            file_handler.setFormatter(formatter)
-
-            cls._commandLogger.addHandler(file_handler)
-            cls._cronLogger.addHandler(file_handler)
+            cls._createLoggers(cls)
 
             cls._instance = super(NoFapLogger, cls).__new__(cls)
 
@@ -58,5 +59,23 @@ class NoFapLogger(object):
         self._commandLogger.info(text)
 
     def info_message(self, message: aiogram.types.Message):
-        self._commandLogger.info(f"{message.chat.username}({message.chat.id}): "
-                                 + message.text if message.text else message.content_type)
+        chat = message.chat
+        text = message.text
+        self._commandLogger.info(f"User {chat.username} ({chat.id}) send a message: "
+                                 + text if text else message.content_type)
+
+    @staticmethod
+    def _removeHandlers(logger):
+        logger.handlers.clear()
+
+    @staticmethod
+    def _addHandlers(logger, handlers):
+        for handler in handlers:
+            logger.addHandler(handler)
+
+    def turnOffLogging(self):
+        self._removeHandlers(self._commandLogger)
+        self._removeHandlers(self._cronLogger)
+
+    def turnOnLogging(self):
+        self._createLoggers()
