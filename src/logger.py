@@ -1,15 +1,37 @@
 import os
 import aiogram
+import asyncio
 import logging
+import shutil
 from logging.handlers import TimedRotatingFileHandler
-from datetime import time
-from src.constants import LOG_FILENAME, BACKUP_FOLDER, NO_FAP_LOGGER_NAME, SCHEDULER_LOGGER_NAME
+from datetime import time, datetime
+from src.constants import LOG_FILENAME, LOGS_FOLDER, NO_FAP_LOGGER_NAME, SCHEDULER_LOGGER_NAME, BACKUP_FOLDER
+from singleton_decorator import singleton
 
+class NoFapTimedRotatingFileHandler(TimedRotatingFileHandler):
+    def setLogsSender(self, logsSender):
+        self._logsSender = logsSender
+
+    def doRollover(self):
+        super().doRollover()
+
+        if self._logsSender:
+            loop = asyncio.get_running_loop()
+
+            target = sorted(os.listdir(LOGS_FOLDER))[-1]
+
+            task = loop.create_task(self._logsSender(os.path.join(LOGS_FOLDER, target)))
+            task.add_done_callback(
+                lambda _: shutil.move(
+                        os.path.join(LOGS_FOLDER, target),
+                        os.path.join(BACKUP_FOLDER, f"{target}-{datetime.now().timestamp()}")
+                    )
+            )
+
+@singleton
 class NoFapLogger(object):
     _commandLogger = None
     _cronLogger = None
-
-    _instance = None
 
     @staticmethod
     def _turnOnConsoleLogging(logger):
@@ -33,7 +55,7 @@ class NoFapLogger(object):
             self._turnOffConsoleLogging(self._commandLogger)
             self._turnOffConsoleLogging(self._cronLogger)
 
-    def _createLoggers(self):
+    def __init__(self):
         self._commandLogger = logging.getLogger(NO_FAP_LOGGER_NAME)
         self._cronLogger = logging.getLogger(SCHEDULER_LOGGER_NAME)
 
@@ -42,21 +64,16 @@ class NoFapLogger(object):
 
         formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
-        file_handler = TimedRotatingFileHandler(os.path.join(BACKUP_FOLDER, LOG_FILENAME),
-                                                when="midnight", atTime=time(hour=22, minute=00))
-        file_handler.setLevel(logging.INFO)
-        file_handler.setFormatter(formatter)
+        self._file_handler = NoFapTimedRotatingFileHandler(filename=os.path.join(LOGS_FOLDER, LOG_FILENAME),
+                                                           when="midnight", atTime=time(hour=22, minute=00))
+        self._file_handler.setLevel(logging.INFO)
+        self._file_handler.setFormatter(formatter)
 
-        self._commandLogger.addHandler(file_handler)
-        self._cronLogger.addHandler(file_handler)
+        self._commandLogger.addHandler(self._file_handler)
+        self._cronLogger.addHandler(self._file_handler)
 
-    def __new__(cls):
-        if cls._instance is None:
-            cls._createLoggers(cls)
-
-            cls._instance = super(NoFapLogger, cls).__new__(cls)
-
-        return cls._instance
+    def setLoggerSender(self, loggerSender):
+        self._file_handler.setLogsSender(loggerSender)
 
     def info(self, text: str):
         self._commandLogger.info(text)
@@ -64,21 +81,5 @@ class NoFapLogger(object):
     def info_message(self, message: aiogram.types.Message):
         chat = message.chat
         text = message.text
-        self._commandLogger.info(f"User {chat.username} ({chat.id}) send a message: "
-                                 + text if text else message.content_type)
-
-    # @staticmethod
-    # def _removeHandlers(logger):
-    #     logger.handlers.clear()
-
-    # @staticmethod
-    # def _addHandlers(logger, handlers):
-    #     for handler in handlers:
-    #         logger.addHandler(handler)
-
-    # def turnOffLogging(self):
-    #     self._removeHandlers(self._commandLogger)
-    #     self._removeHandlers(self._cronLogger)
-
-    # def turnOnLogging(self):
-    #     self._createLoggers()
+        messageText = text if f'"{text}"' else message.content_type
+        self._commandLogger.info(f'User {chat.username} ({chat.id}) send a message: "{messageText}"')

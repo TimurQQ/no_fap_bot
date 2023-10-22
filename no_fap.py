@@ -7,6 +7,7 @@ from database import database
 from commands import commands
 from src.keyboard import start_kb
 from sheduler import scheduler
+from src.filters.admin import admins
 
 from logger import noFapLogger
 
@@ -32,6 +33,13 @@ async def send_welcome(message: types.Message):
 
     await message.reply("Choose your last fap day:", reply_markup=start_kb)
 
+async def send_logs(logsFilePath):
+    for admin in admins:
+        await bot.send_document(
+            admin,
+            (f"{logsFilePath}-{datetime.now().timestamp()}", open(logsFilePath, 'rb'))
+        )
+
 def parse_args():
     parser = ArgumentParser(prog=f"{__file__}")
     parser.add_argument('-l', '--logs_output', type=str)
@@ -43,6 +51,7 @@ def parse_args():
         noFapLogger.set_console_logging(False)
 
 if __name__ == '__main__':
+    noFapLogger.setLoggerSender(send_logs)
     noFapLogger.info("start bot")
     parse_args()
     scheduler.start()

@@ -10,8 +10,7 @@ import os
 import json
 from logger import noFapLogger
 from src.utils.json_encoder import LogJSONEncoder
-import shutil
-from src.constants import LOG_FILENAME, BACKUP_FOLDER
+from src.filters.admin import admins
 
 random.seed(datetime.now().timestamp())
 
@@ -78,14 +77,14 @@ async def sendCheckMessageBroadcast():
         if uid in database.getBlackList():
             message = "You are no longer participating in the challenge. \nBut no one forbids collecting memes :)"
             username = database.data[uid].username
-            noFapLogger.info(f"Send check message: {message} to user {username}({uid})")
+            noFapLogger.info(f'Send check message: "{message}" to user {username}({uid})')
             await bot.send_message(uid,
                 message,
                 reply_markup=types.ReplyKeyboardRemove()
             )
             continue
         message = "Did you fap today?"
-        noFapLogger.info(f"Send check message: {message} to user {username}({uid})")
+        noFapLogger.info(f'Send check message: "{message}" to user {username}({uid})')
 
         await bot.send_message(uid, message, reply_markup=reply_kb)
         database.user_contexts[uid].daily_check()
