@@ -1,6 +1,6 @@
+from aiogram import types
 from aiogram.dispatcher.middlewares import BaseMiddleware
 from aiogram.dispatcher.handler import CancelHandler
-from aiogram import types
 from database import database
 from datetime import datetime
 

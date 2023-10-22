@@ -1,6 +1,6 @@
-from aiogram.types import ReplyKeyboardRemove, \
+from aiogram.types import InlineKeyboardButton, \
     ReplyKeyboardMarkup, KeyboardButton, \
-    InlineKeyboardMarkup, InlineKeyboardButton
+    InlineKeyboardMarkup
 
 from aiogram.utils.callback_data import CallbackData
 

@@ -1,0 +1,26 @@
+import dataclasses
+import json
+from datetime import datetime
+from datetime import date
+
+class EnhancedJSONEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if dataclasses.is_dataclass(obj):
+                return dataclasses.asdict(obj)
+            elif isinstance(obj, datetime):
+                return obj.isoformat()
+            elif isinstance(obj, date):
+                return obj.isoformat()
+            return super().default(obj)
+
+class LogJSONEncoder(json.JSONEncoder):
+        def default(self, obj):
+            if dataclasses.is_dataclass(obj):
+                return dataclasses.asdict(obj)
+            elif obj.__name__ == "collectedMemes":
+                 return None
+            elif isinstance(obj, datetime):
+                return obj.isoformat()
+            elif isinstance(obj, date):
+                return obj.isoformat()
+            return super().default(obj)

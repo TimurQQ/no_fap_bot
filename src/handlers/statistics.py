@@ -1,11 +1,10 @@
 from dispatcher import dp, bot
+from aiogram import types
 from aiogram.dispatcher.filters import Text
 from commands import commands
-from aiogram import types
 from database import database
 from datetime import datetime
-from src.keyboard import getInlineSlider
-from src.keyboard import choosepage_cb
+from src.keyboard import getInlineSlider, choosepage_cb
 
 def make_statistics_message(topListPart, callerStat, page):
     return (
@@ -36,7 +35,7 @@ async def handle_next_page(query: types.CallbackQuery, callback_data: dict):
     topListPart, callerStat = database.getTop(page = next_page, caller=callback_data["caller"])
     await bot.edit_message_text(
         make_statistics_message(topListPart, callerStat, next_page),
-        query.from_user.id,
+        query.message.chat.id,
         query.message.message_id,
         reply_markup=getInlineSlider(next_page, callback_data["caller"])
     )
@@ -49,7 +48,7 @@ async def handle_prev_page(query: types.CallbackQuery, callback_data: dict):
     topListPart, callerStat = database.getTop(page = prev_page, caller=callback_data["caller"])
     await bot.edit_message_text(
         make_statistics_message(topListPart, callerStat, prev_page),
-        query.from_user.id,
+        query.message.chat.id,
         query.message.message_id,
         reply_markup=getInlineSlider(prev_page, callback_data["caller"])
     )

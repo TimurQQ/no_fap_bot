@@ -2,10 +2,9 @@ import json
 import os
 from .user_stat import UserStat
 from datetime import datetime
-from datetime import date
 from .states import UserContext
 import dateutil.parser
-import dataclasses
+from src.utils.json_encoder import EnhancedJSONEncoder
 
 class NoFapDB:
     def __init__(
@@ -102,16 +101,6 @@ class NoFapDB:
                 break
         
         return sorted_data[page*10:(page+1)*10], callerStat
-
-class EnhancedJSONEncoder(json.JSONEncoder):
-        def default(self, obj):
-            if dataclasses.is_dataclass(obj):
-                return dataclasses.asdict(obj)
-            elif isinstance(obj, datetime):
-                return obj.isoformat()
-            elif isinstance(obj, date):
-                return obj.isoformat()
-            return super().default(obj)
 
 if __name__ == "__main__":
     testDB = NoFapDB()

@@ -1,12 +1,16 @@
 from dispatcher import dp, bot
 from aiogram import types
 from aiogram.dispatcher.filters import Text
-from datetime import datetime
+from datetime import date, datetime
 from aiogram.utils import exceptions
 from database import database
 from src.keyboard import reply_kb, menu_kb
 import random
 import os
+import json
+from logger import noFapLogger
+from src.utils.json_encoder import LogJSONEncoder
+from src.filters.admin import admins
 
 random.seed(datetime.now().timestamp())
 
@@ -57,6 +61,7 @@ async def checkRating():
                 day_memes = database.cached_memes[new_day]
                 new_meme = random.choice(day_memes)
                 userStat.collectedMemes.append(new_meme)
+                noFapLogger.info(f"User {userStat.username}({userStat.uid}) gets meme {new_meme}")
                 await bot.send_message(userStat.uid, f"Congratulations!!! You have collected {new_day}-day meme.", reply_markup=menu_kb)
                 with open(os.path.join("storage", "memes", new_meme), "rb") as meme_pic:
                     await bot.send_photo(userStat.uid, meme_pic)
@@ -66,12 +71,20 @@ async def checkRating():
     database.update()
 
 async def sendCheckMessageBroadcast():
+    noFapLogger.info("Send broadcast")
+    noFapLogger.info(f"{json.dump(database.data, cls=LogJSONEncoder, indent=4)}")
     for uid in database.data:
         if uid in database.getBlackList():
+            message = "You are no longer participating in the challenge. \nBut no one forbids collecting memes :)"
+            username = database.data[uid].username
+            noFapLogger.info(f'Send check message: "{message}" to user {username}({uid})')
             await bot.send_message(uid,
-                "You are no longer participating in the challenge. \nBut no one forbids collecting memes :)",
+                message,
                 reply_markup=types.ReplyKeyboardRemove()
             )
             continue
-        await bot.send_message(uid, "Did you fap today?", reply_markup=reply_kb)
+        message = "Did you fap today?"
+        noFapLogger.info(f'Send check message: "{message}" to user {username}({uid})')
+
+        await bot.send_message(uid, message, reply_markup=reply_kb)
         database.user_contexts[uid].daily_check()
