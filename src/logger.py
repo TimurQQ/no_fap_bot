@@ -1,8 +1,11 @@
 import os
+import re
+import json
 import aiogram
 import asyncio
 import logging
 import shutil
+from src.utils.json_encoder import EnhancedJSONEncoder
 from logging.handlers import TimedRotatingFileHandler
 from datetime import time, datetime
 from src.constants import LOG_FILENAME, LOGS_FOLDER, NO_FAP_LOGGER_NAME, SCHEDULER_LOGGER_NAME, BACKUP_FOLDER
@@ -82,4 +85,8 @@ class NoFapLogger(object):
         chat = message.chat
         text = message.text
         messageText = text if f'"{text}"' else message.content_type
-        self._commandLogger.info(f'User {chat.username} ({chat.id}) send a message: "{messageText}"')
+        self.info(f'User {chat.username} ({chat.id}) send a message: "{messageText}"')
+
+    def info_database(self, data):
+        data_log = re.sub(r'"collectedMemes": \[[^]]*\],\s+', "", json.dumps(data, cls=EnhancedJSONEncoder, indent=4))
+        self.info(f"{data_log}")
