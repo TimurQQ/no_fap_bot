@@ -17,19 +17,19 @@ async def send_message_safety(chat_id, message, reply_markup, on_success = lambd
         await bot.send_message(chat_id, message, reply_markup=reply_markup)
         on_success()
     except exceptions.BotBlocked as e:
-        print(f"Target [ID:{chat_id}]: blocked by user")
+        noFapLogger.info(f"Target [ID:{chat_id}]: blocked by user")
         database.update(chat_id, bannedFlag=True)
         on_failure(e)
     except exceptions.ChatNotFound as e:
-        print(f"Target [ID:{chat_id}]: invalid user ID")
+        noFapLogger.info(f"Target [ID:{chat_id}]: invalid user ID")
         database.update(chat_id, bannedFlag=True)
         on_failure(e)
     except exceptions.RetryAfter as e:
-        print(f"Target [ID:{chat_id}]: Flood limit is exceeded. Sleep {e.timeout} seconds.")
+        noFapLogger.info(f"Target [ID:{chat_id}]: Flood limit is exceeded. Sleep {e.timeout} seconds.")
         await asyncio.sleep(e.timeout)
         return await send_message_safety(chat_id, message, reply_markup, on_success)
     except exceptions.TelegramAPIError as e:
-        print(f"Target [ID:{chat_id}]: failed")
+        noFapLogger.info(f"Target [ID:{chat_id}]: failed")
         on_failure(e)
 
 @dp.message_handler(Text(equals=["Yes!", "I'm guilty"], ignore_case=True))
