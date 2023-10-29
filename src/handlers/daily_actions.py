@@ -37,9 +37,9 @@ async def fapping_reply(message: types.Message):
 
 
 def memeExistsForUser(user, new_day) -> bool:
-    if (new_day in database.cached_memes):
+    if new_day in database.cached_memes:
         return True
-    if (not user.isWinner):
+    if not user.isWinner:
         database.update(user.uid, winnerFlag=True)
     return False
 
@@ -84,11 +84,16 @@ async def checkRating():
             if (last_day == new_day):
                 continue
 
-        if not memeExistsForUser(user, new_day):
+        if not user.isWinner and not memeExistsForUser(user, new_day):
             await send_message_safety(user, f"Not enough memes for you :(", reply_markup=menu_kb)
             continue
 
-        database.update(uid, winnerFlag=False)
+        if user.isWinner:
+            if memeExistsForUser(user, new_day):
+                database.update(uid, winnerFlag=False)
+            else:
+                # TODO: Add mechanism allows ask daily question to winner one time a day
+                continue
 
         await sendMemeToUser(user, new_day)
 
