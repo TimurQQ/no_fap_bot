@@ -70,10 +70,11 @@ async def checkRating():
         database.update(uid, newNickName=actual_nick)
 
         new_day = 0
+        last_day = 0
         if len(user.collectedMemes) != 0:
             last_day = int(user.collectedMemes[-1].split()[1].split("_")[0])
             new_day = min(last_day + 1, days)
-            if (last_day == new_day):
+            if last_day == new_day:
                 continue
 
         if (new_day not in database.cached_memes):
@@ -86,7 +87,8 @@ async def checkRating():
 
         await sendMemeToUser(user, new_day)
 
-        await sendDailyQuestion(user, actual_nick)
+        if days - last_day == 1:
+            await sendDailyQuestion(user, actual_nick)
     database.update()
 
 
