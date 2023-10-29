@@ -36,14 +36,6 @@ async def fapping_reply(message: types.Message):
     await message.reply(message_text, reply_markup=menu_kb)
 
 
-def memeExistsForUser(user, new_day) -> bool:
-    if (new_day in database.cached_memes):
-        return True
-    if (not user.isWinner):
-        database.update(user.uid, winnerFlag=True)
-    return False
-
-
 async def sendMemeToUser(user, new_day):
     day_memes = database.cached_memes[new_day]
     new_meme = random.choice(day_memes)
@@ -84,8 +76,10 @@ async def checkRating():
             if (last_day == new_day):
                 continue
 
-        if not memeExistsForUser(user, new_day):
-            await send_message_safety(user, f"Not enough memes for you :(", reply_markup=menu_kb)
+        if (new_day not in database.cached_memes):
+            if (not user.isWinner):
+                database.update(user.uid, winnerFlag=True)
+                await send_message_safety(user.uid, f"Not enough memes for you :(", reply_markup=menu_kb)
             continue
 
         database.update(uid, winnerFlag=False)
