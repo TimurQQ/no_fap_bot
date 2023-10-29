@@ -81,12 +81,15 @@ class NoFapLogger(object):
     def info(self, text: str):
         self._commandLogger.info(text)
 
+    def error(self, text: str):
+        self._commandLogger.error(text)
+
     def info_message(self, message: aiogram.types.Message):
         chat = message.chat
         text = message.text
         messageText = text if f'"{text}"' else message.content_type
         self.info(f'User {chat.username} ({chat.id}) send a message: "{messageText}"')
 
-    def info_database(self, data):
+    def logDatabase(self, data):
         data_log = re.sub(r'"collectedMemes": \[[^]]*\],\s+', "", json.dumps(data, cls=EnhancedJSONEncoder, indent=4))
         self.info(f"{data_log}")
