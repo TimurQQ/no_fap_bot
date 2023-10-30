@@ -64,10 +64,9 @@ async def checkRating():
 
         if (days < 0 or user.isBlocked): continue
 
-        uid = user.uid
-        chat = await bot.get_chat(uid)
+        chat = await bot.get_chat(user.uid)
         actual_nick = chat.username
-        database.update(uid, newNickName=actual_nick)
+        database.update(user.uid, newNickName=actual_nick)
 
         new_day = 0
         last_day = 0
@@ -77,15 +76,14 @@ async def checkRating():
             if last_day == new_day:
                 continue
 
-        if (new_day not in database.cached_memes):
-            if (not user.isWinner):
-                database.update(user.uid, winnerFlag=True)
-                await send_message_safety(user.uid, f"Not enough memes for you :(", reply_markup=menu_kb)
+        if (new_day in database.cached_memes):
+            database.update(user.uid, winnerFlag=False)
+            await sendMemeToUser(user, new_day)
+        elif (not user.isWinner):
+            database.update(user.uid, winnerFlag=True)
+            await send_message_safety(user, f"Not enough memes for you :(", reply_markup=menu_kb)
+        else:
             continue
-
-        database.update(uid, winnerFlag=False)
-
-        await sendMemeToUser(user, new_day)
 
         if days - last_day == 1:
             await sendDailyQuestion(user, actual_nick)
@@ -114,3 +112,12 @@ async def send_photo_safety(chat_id, file_name):
             await bot.send_photo(chat_id, meme_pic)
         except Exception as exc:
             noFapLogger.error(f'"{exc}" while sending meme to user {chat_id}')
+
+
+async def sendCheckMessageToWinners():
+    noFapLogger.info("Send broadcast message for winners")
+    for uid in database.data:
+        user = database.data[uid]
+        if (not user.isWinner):
+            continue
+        await sendDailyQuestion(user, user.username)
