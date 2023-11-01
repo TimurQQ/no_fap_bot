@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 from datetime import date
 
+
 class EnhancedJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if dataclasses.is_dataclass(obj):
