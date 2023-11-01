@@ -2,7 +2,12 @@ from dispatcher import dp, bot
 from aiogram import types
 from aiogram.dispatcher.filters import Text
 from datetime import datetime
-from aiogram.utils.exceptions import BotBlocked, ChatNotFound, RetryAfter, TelegramAPIError
+from aiogram.utils.exceptions import (
+    BotBlocked,
+    ChatNotFound,
+    RetryAfter,
+    TelegramAPIError,
+)
 from database import database
 from src.keyboard import reply_kb, menu_kb
 import random
@@ -42,7 +47,11 @@ async def sendMemeToUser(user, new_day):
     user.collectedMemes.append(new_meme)
     noFapLogger.info(f"User {user.username}({user.uid}) gets meme {new_meme}")
 
-    await send_message_safety(user, f"Congratulations!!! You have collected {new_day}-day meme.", reply_markup=menu_kb)
+    await send_message_safety(
+        user,
+        f"Congratulations!!! You have collected {new_day}-day meme.",
+        reply_markup=menu_kb,
+    )
     await send_photo_safety(user.uid, new_meme)
 
 
@@ -51,10 +60,15 @@ async def sendDailyQuestion(user, actual_nick):
         noFapLogger.info(f'User: "{actual_nick}" has been banned by bot!')
         return
     message = "Did you fap today?"
-    noFapLogger.info(f'Try to send check message: "{message}" to user {actual_nick}({user.uid})')
+    noFapLogger.info(
+        f'Try to send check message: "{message}" to user {actual_nick}({user.uid})'
+    )
 
-    await send_message_safety(user, message, reply_markup=reply_kb,
-        on_success=lambda: database.user_contexts[user.uid].daily_check()
+    await send_message_safety(
+        user,
+        message,
+        reply_markup=reply_kb,
+        on_success=lambda: database.user_contexts[user.uid].daily_check(),
     )
 
 
@@ -62,7 +76,8 @@ async def checkRating():
     for user in database.data.values():
         days = (datetime.now() - user.lastTimeFap).days
 
-        if (days < 0 or user.isBlocked): continue
+        if days < 0 or user.isBlocked:
+            continue
 
         chat = await bot.get_chat(user.uid)
         actual_nick = chat.username
@@ -76,12 +91,14 @@ async def checkRating():
             if last_day == new_day:
                 continue
 
-        if (new_day in database.cached_memes):
+        if new_day in database.cached_memes:
             database.update(user.uid, winnerFlag=False)
             await sendMemeToUser(user, new_day)
-        elif (not user.isWinner):
+        elif not user.isWinner:
             database.update(user.uid, winnerFlag=True)
-            await send_message_safety(user, f"Not enough memes for you :(", reply_markup=menu_kb)
+            await send_message_safety(
+                user, f"Not enough memes for you :(", reply_markup=menu_kb
+            )
         else:
             continue
 
@@ -90,7 +107,7 @@ async def checkRating():
     database.update()
 
 
-async def send_message_safety(user, message, reply_markup, on_success = lambda: {}):
+async def send_message_safety(user, message, reply_markup, on_success=lambda: {}):
     chat_id = user.uid
     try:
         await bot.send_message(chat_id, message, reply_markup=reply_markup)
@@ -118,6 +135,6 @@ async def sendCheckMessageToWinners():
     noFapLogger.info("Send broadcast message for winners")
     for uid in database.data:
         user = database.data[uid]
-        if (not user.isWinner):
+        if not user.isWinner:
             continue
         await sendDailyQuestion(user, user.username)

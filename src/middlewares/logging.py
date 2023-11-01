@@ -3,6 +3,7 @@ from aiogram.dispatcher.middlewares import BaseMiddleware
 
 from logger import noFapLogger
 
+
 class LoggingMiddleware(BaseMiddleware):
     def __init__(self):
         super(LoggingMiddleware, self).__init__()

@@ -3,6 +3,7 @@ from aiogram.dispatcher.filters import BoundFilter
 
 admins = {464237994, 930629580}
 
+
 class IsAdminFilter(BoundFilter):
     key = "is_admin"
 

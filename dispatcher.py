@@ -10,9 +10,9 @@ from src.middlewares.black_list import BlackListMiddleware
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
-local_server = TelegramAPIServer.from_base('http://localhost:8081')
+local_server = TelegramAPIServer.from_base("http://localhost:8081")
 
-bot = Bot(token=BOT_TOKEN, server = local_server)
+bot = Bot(token=BOT_TOKEN, server=local_server)
 dp = Dispatcher(bot, storage=MemoryStorage())
 dp.filters_factory.bind(IsAdminFilter)
 dp.middleware.setup(LoggingMiddleware())
