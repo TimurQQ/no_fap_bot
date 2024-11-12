@@ -67,7 +67,6 @@ class RefreshUserState(UserState):
 
     def state_action(self, context, pong_flag = False):
         self._logInfo(context)
-        if (pong_flag):
-            context.change_state(PingUserState())
-        else:
+        if (pong_flag == False):
             context.refresh()
+        context.change_state(PingUserState())
