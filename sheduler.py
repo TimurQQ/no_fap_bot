@@ -12,6 +12,6 @@ logging_trigger = CronTrigger(hour='21',minute='00')
 winners_trigger = CronTrigger(hour='20',minute='00')
 check_rating_trigger = IntervalTrigger(seconds = 60)
 
-scheduler.add_job(noFapLogger.logDatabase, trigger=logging_trigger)
+scheduler.add_job(noFapLogger.logDatabase, trigger=logging_trigger, args=(database.data,))
 scheduler.add_job(sendCheckMessageToWinners, trigger=winners_trigger)
 scheduler.add_job(checkRating, trigger=check_rating_trigger)
