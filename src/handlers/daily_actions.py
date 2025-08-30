@@ -12,6 +12,16 @@ import asyncio
 
 random.seed(datetime.now().timestamp())
 
+# Кэш для проблемных пользователей, чтобы не проверять их слишком часто
+_problematic_users_cache = set()
+
+def clear_problematic_users_cache():
+    """Очищает кэш проблемных пользователей. Вызывается периодически."""
+    global _problematic_users_cache
+    cache_size = len(_problematic_users_cache)
+    _problematic_users_cache.clear()
+    noFapLogger.info(f"Cleared problematic users cache, removed {cache_size} entries")
+
 
 @dp.message_handler(Text(equals=["Yes!", "I'm guilty"], ignore_case=True))
 async def fapping_reply(message: types.Message):
@@ -59,14 +69,38 @@ async def sendDailyQuestion(user, actual_nick):
 
 
 async def checkRating():
+    noFapLogger.info(f"Starting checkRating for {len(database.data)} users")
+    processed_users = 0
+    blocked_users = 0
+    error_users = 0
+    
     for user in database.data.values():
         days = (datetime.now() - user.lastTimeFap).days
 
         if (days < 0 or user.isBlocked): continue
+        
+        # Пропускаем пользователей, которые недавно вызывали ошибки
+        if user.uid in _problematic_users_cache:
+            continue
 
-        chat = await bot.get_chat(user.uid)
-        actual_nick = chat.username
-        database.update(user.uid, newNickName=actual_nick)
+        # Безопасное получение информации о чате с обработкой ошибок
+        try:
+            chat = await bot.get_chat(user.uid)
+            actual_nick = chat.username
+            database.update(user.uid, newNickName=actual_nick)
+        except (ChatNotFound, BotBlocked) as err:
+            noFapLogger.warning(f'User {user.username}({user.uid}) is not accessible: {err}. Marking as blocked.')
+            database.update(user.uid, bannedFlag=True)
+            _problematic_users_cache.add(user.uid)
+            blocked_users += 1
+            continue
+        except TelegramAPIError as err:
+            noFapLogger.error(f'Telegram API error for user {user.username}({user.uid}): {err}. Skipping this user.')
+            _problematic_users_cache.add(user.uid)
+            error_users += 1
+            continue
+        
+        processed_users += 1
 
         new_day = 0
         last_day = 0
@@ -87,7 +121,9 @@ async def checkRating():
 
         if days - last_day == 1:
             await sendDailyQuestion(user, actual_nick)
+    
     database.update()
+    noFapLogger.info(f"checkRating completed: {processed_users} processed, {blocked_users} blocked, {error_users} errors")
 
 
 async def send_message_safety(user, message, reply_markup, on_success = lambda: {}):
