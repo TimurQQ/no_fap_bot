@@ -1,6 +1,0 @@
-aiogram==2.25.1
-singleton-decorator==1.0.0
-python-dateutil==2.8.2
-aiogram-calendar==0.1.1
-APScheduler==3.10.1
-
