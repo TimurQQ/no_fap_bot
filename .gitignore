@@ -137,6 +137,7 @@ dist/
 .venv/
 .poetry/
 __pypackages__/
+poetry.lock
 poetry.lock.bak
 .pdm-python
 
