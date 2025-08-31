@@ -20,10 +20,9 @@ fi
 
 # 2. Останавливаем бота
 echo -e "${YELLOW}🛑 Stopping bot process...${NC}"
-BOT_PID=$(ps aux | grep -E '[p]oetry run python\s+-\w+\s+no_fap.py' | awk '{print $2}')
-if [ ! -z "$BOT_PID" ]; then
-    kill $BOT_PID
-    echo -e "${GREEN}✅ Bot stopped (PID: $BOT_PID)${NC}"
+pkill -f "no_fap.py"
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✅ Bot process stopped${NC}"
 else
     echo -e "${YELLOW}⚠️  No running bot process found${NC}"
 fi
