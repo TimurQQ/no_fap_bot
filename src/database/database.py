@@ -117,7 +117,7 @@ class NoFapDB:
             if user_stat.isBlocked:
                 banned_users.append({
                     'uid': uid,
-                    'username': user_stat.username or 'no_username'
+                    'username': user_stat.username or 'NaN'
                 })
         return banned_users
     
