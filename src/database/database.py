@@ -111,6 +111,18 @@ class NoFapDB:
             os.makedirs(memes_path, exist_ok=True)
     
     def getBlackList(self):
+        """Возвращает список заблокированных пользователей с их ID и usernames"""
+        banned_users = []
+        for uid, user_stat in self.data.items():
+            if user_stat.isBlocked:
+                banned_users.append({
+                    'uid': uid,
+                    'username': user_stat.username or 'no_username'
+                })
+        return banned_users
+    
+    def getBlackListUIDs(self):
+        """Возвращает только UID'ы заблокированных пользователей (для обратной совместимости)"""
         bannedUIDs = map(lambda item: item[0], filter(lambda uStat: uStat[1].isBlocked, self.data.items()))
         return set(bannedUIDs)
 

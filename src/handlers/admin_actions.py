@@ -37,8 +37,27 @@ async def no_admin_rights_handler(message: types.Message):
 
 @dp.message_handler(commands=[commands.BlacklistCommand])
 async def get_black_list(message: types.Message):
-    await message.answer("BlackList: \n" +
-        "\n".join([
-            f"@{(await bot.get_chat(userId)).username} is blocked" for userId in database.getBlackList()
-        ])
-    )
+    blacklisted_users = database.getBlackList()
+    
+    if not blacklisted_users:
+        await message.answer("BlackList is empty ✅")
+        return
+    
+    # Формируем список без API вызовов - используем сохраненные usernames
+    blacklist_lines = []
+    for user in blacklisted_users:
+        username = user['username']
+        uid = user['uid']
+        blacklist_lines.append(f"@{username} (ID: {uid}) is blocked")
+    
+    # Простое разбиение на части по 4000 символов
+    full_text = f"BlackList ({len(blacklisted_users)} users):\n\n" + "\n".join(blacklist_lines)
+    
+    # Разбиваем текст на куски по 4000 символов
+    chunk_size = 4000
+    for i in range(0, len(full_text), chunk_size):
+        chunk = full_text[i:i + chunk_size]
+        if i == 0:
+            await message.answer(chunk)
+        else:
+            await message.answer(f"BlackList (continued):\n{chunk}")

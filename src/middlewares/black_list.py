@@ -9,7 +9,7 @@ class BlackListMiddleware(BaseMiddleware):
         super(BlackListMiddleware, self).__init__()
 
     async def on_process_message(self, message: types.Message, data: dict):
-        if message.chat.id in database.getBlackList():
+        if message.chat.id in database.getBlackListUIDs():
             userStat = database.getStatById(message.chat.id)
             await message.answer(
                 "Your statistics: \n" +

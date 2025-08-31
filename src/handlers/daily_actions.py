@@ -57,7 +57,7 @@ async def sendMemeToUser(user, new_day):
 
 
 async def sendDailyQuestion(user, actual_nick):
-    if user.uid in database.getBlackList():
+    if user.uid in database.getBlackListUIDs():
         noFapLogger.info(f'User: "{actual_nick}" has been banned by bot!')
         return
     message = "Did you fap today?"
