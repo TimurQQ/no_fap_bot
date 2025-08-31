@@ -50,9 +50,17 @@ def parse_args():
     else:
         noFapLogger.set_console_logging(False)
 
-if __name__ == '__main__':
+async def on_startup(dp):
+    """Callback функция, вызываемая при запуске бота."""
+    scheduler.start()
+    noFapLogger.info("Scheduler started")
+
+def main():
+    """Main entry point for the bot."""
     noFapLogger.setLoggerSender(send_logs)
     noFapLogger.info("start bot")
     parse_args()
-    scheduler.start()
-    executor.start_polling(dp, skip_updates=True)
+    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
+
+if __name__ == '__main__':
+    main()

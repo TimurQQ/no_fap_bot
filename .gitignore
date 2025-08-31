@@ -131,6 +131,17 @@ dmypy.json
 # VS Code settings
 .vscode/
 
+# Poetry
+dist/
+*.egg-info/
+.venv/
+.poetry/
+__pypackages__/
+poetry.lock.bak
+.pdm-python
+
 # Project specific
 storage/
 backup/
+logs/*
+!logs/.gitkeep

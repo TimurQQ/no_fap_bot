@@ -69,7 +69,13 @@ async def sendDailyQuestion(user, actual_nick):
 
 
 async def checkRating():
-    noFapLogger.info(f"Starting checkRating for {len(database.data)} users")
+    users_count = len(database.data)
+    noFapLogger.info(f"Starting checkRating for {users_count} users")
+    
+    if users_count == 0:
+        noFapLogger.info("No users in database, skipping checkRating")
+        return
+    
     processed_users = 0
     blocked_users = 0
     error_users = 0

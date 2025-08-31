@@ -11,7 +11,7 @@ scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 
 logging_trigger = CronTrigger(hour='21',minute='00')
 winners_trigger = CronTrigger(hour='20',minute='00')
-check_rating_trigger = IntervalTrigger(minutes = 10)  # Изменено с 1 минуты на 10 минут для снижения нагрузки
+check_rating_trigger = IntervalTrigger(seconds = 60)
 cache_clear_trigger = CronTrigger(hour='3',minute='00')  # Очистка кэша каждый день в 3:00
 
 scheduler.add_job(noFapLogger.logDatabase, trigger=logging_trigger, args=(database.data,))

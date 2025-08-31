@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "no-fap-bot"
+version = "1.0.0"
+description = "Telegram bot for NoFap challenge tracking with daily memes and progress monitoring"
+authors = ["Ilyasov Timur <ilyasovtimur2001@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.13"
+aiogram = "^2.25.1"
+singleton-decorator = "^1.0.0"
+python-dateutil = "^2.8.2"
+aiogram-calendar = "^0.1.1"
+APScheduler = "^3.10.1"
+python-dotenv = "^1.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
