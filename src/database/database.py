@@ -5,7 +5,7 @@ from datetime import datetime
 from .states import UserContext
 import dateutil.parser
 from src.utils.json_encoder import EnhancedJSONEncoder
-from src.utils.s3_backup import restore_database_from_s3
+from src.utils.s3_backup import restore_database_from_s3, restore_memes_from_s3
 
 class NoFapDB:
     def __init__(
@@ -22,6 +22,11 @@ class NoFapDB:
         if not os.path.exists(init_file):
             # Пытаемся восстановить из S3
             self._try_restore_from_s3(init_file)
+        
+        # Проверяем существование папки с мемами
+        if not os.path.exists(memes_path) or not os.listdir(memes_path):
+            # Пытаемся восстановить мемы из S3
+            self._try_restore_memes_from_s3(memes_path)
         
         if (os.path.exists(init_file)):
             with open(init_file, "r") as f:
@@ -74,6 +79,36 @@ class NoFapDB:
                 f"and S3 restoration failed: {e}. "
                 f"Cannot start without database."
             )
+    
+    def _try_restore_memes_from_s3(self, memes_path: str):
+        """
+        Пытается восстановить папку с мемами из S3 если локальная папка пуста или отсутствует.
+        
+        Args:
+            memes_path: Путь к папке с мемами
+        """
+        try:
+            from logger import noFapLogger
+            noFapLogger.info(f"🖼️ Memes folder is empty or missing: {memes_path}")
+            noFapLogger.info("🔄 Attempting to restore memes from S3...")
+            
+            # Пытаемся восстановить мемы из S3
+            restore_memes_from_s3(memes_path)
+            
+            # Проверяем что мемы восстановились
+            if os.path.exists(memes_path) and os.listdir(memes_path):
+                memes_count = len([f for f in os.listdir(memes_path) if os.path.isfile(os.path.join(memes_path, f))])
+                noFapLogger.info(f"✅ Memes successfully restored from S3: {memes_count} files")
+            else:
+                noFapLogger.error("⚠️ Memes folder is still empty after S3 restoration")
+                
+        except Exception as e:
+            from logger import noFapLogger
+            noFapLogger.error(f"⚠️ Failed to restore memes from S3: {e}")
+            noFapLogger.info("🎭 Bot will continue without memes (they can be restored later)")
+            # Не падаем с ошибкой - мемы не критичны для работы бота
+            # Создаем пустую папку чтобы избежать ошибок
+            os.makedirs(memes_path, exist_ok=True)
     
     def getBlackList(self):
         bannedUIDs = map(lambda item: item[0], filter(lambda uStat: uStat[1].isBlocked, self.data.items()))
