@@ -14,6 +14,7 @@ python-dateutil = "^2.8.2"
 aiogram-calendar = "^0.1.1"
 APScheduler = "^3.10.1"
 python-dotenv = "^1.1.1"
+boto3 = "^1.40.21"
 
 [build-system]
 requires = ["poetry-core"]

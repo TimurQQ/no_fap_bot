@@ -5,6 +5,7 @@ from datetime import datetime
 from .states import UserContext
 import dateutil.parser
 from src.utils.json_encoder import EnhancedJSONEncoder
+from src.utils.s3_backup import restore_database_from_s3
 
 class NoFapDB:
     def __init__(
@@ -16,6 +17,12 @@ class NoFapDB:
         self.user_contexts = dict()
         self.cached_memes = dict()
         self.file_storage_path = init_file
+        
+        # Проверяем существование локального файла БД
+        if not os.path.exists(init_file):
+            # Пытаемся восстановить из S3
+            self._try_restore_from_s3(init_file)
+        
         if (os.path.exists(init_file)):
             with open(init_file, "r") as f:
                 data = json.load(f)
@@ -44,6 +51,30 @@ class NoFapDB:
                 else:
                     self.cached_memes[day_of_file].append(file_name)
 
+    def _try_restore_from_s3(self, database_path: str):
+        """
+        Пытается восстановить базу данных из S3 если локальный файл отсутствует.
+        Падает с ошибкой если восстановление невозможно.
+        
+        Args:
+            database_path: Путь к файлу базы данных
+            
+        Raises:
+            RuntimeError: Если база данных не может быть восстановлена из S3
+        """
+        try:
+            # Пытаемся восстановить из S3
+            restore_database_from_s3(database_path)
+            # Если дошли до сюда - восстановление успешно
+                
+        except Exception as e:
+            # Любая ошибка при восстановлении - оборачиваем в понятное сообщение
+            raise RuntimeError(
+                f"❌ CRITICAL ERROR: Database file '{database_path}' not found locally "
+                f"and S3 restoration failed: {e}. "
+                f"Cannot start without database."
+            )
+    
     def getBlackList(self):
         bannedUIDs = map(lambda item: item[0], filter(lambda uStat: uStat[1].isBlocked, self.data.items()))
         return set(bannedUIDs)
