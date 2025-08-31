@@ -28,20 +28,31 @@ else
     echo -e "${YELLOW}⚠️  No running bot process found${NC}"
 fi
 
-# 3. Создаем локальный бэкап БД
-echo -e "${YELLOW}💾 Creating local database backup...${NC}"
+# 3. Создаем локальные бэкапы
+echo -e "${YELLOW}💾 Creating local backups...${NC}"
+
+# Создаем директорию backup если её нет
+mkdir -p backup
+
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+
+# Бэкап базы данных
 if [ -f "storage/all_scores_saved.json" ]; then
-    # Создаем директорию backup если её нет
-    mkdir -p backup
-    
-    # Создаем бэкап с временной меткой
-    TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
     cp storage/all_scores_saved.json "backup/all_scores_saved_${TIMESTAMP}.json"
     cp storage/all_scores_saved.json "backup/all_scores_saved.json"
-    
-    echo -e "${GREEN}✅ Local backup created: backup/all_scores_saved_${TIMESTAMP}.json${NC}"
+    echo -e "${GREEN}✅ Database backup: backup/all_scores_saved_${TIMESTAMP}.json${NC}"
 else
-    echo -e "${YELLOW}⚠️  Database file not found, skipping local backup${NC}"
+    echo -e "${YELLOW}⚠️  Database file not found, skipping database backup${NC}"
+fi
+
+# Бэкап мемов
+if [ -d "storage/memes" ]; then
+    tar -czf "backup/memes_${TIMESTAMP}.tar.gz" -C storage memes
+    tar -czf "backup/memes_latest.tar.gz" -C storage memes
+    MEMES_COUNT=$(find storage/memes -type f | wc -l)
+    echo -e "${GREEN}✅ Memes backup: backup/memes_${TIMESTAMP}.tar.gz (${MEMES_COUNT} files)${NC}"
+else
+    echo -e "${YELLOW}⚠️  Memes folder not found, skipping memes backup${NC}"
 fi
 
 # 4. Создаем S3 бэкап
@@ -56,9 +67,9 @@ else
     if [ "$S3_ENABLED" = "true" ]; then
         poetry run python -c "
 try:
-    from src.utils.s3_backup import backup_database_to_s3
-    backup_database_to_s3()
-    print('✅ S3 backup completed successfully')
+    from src.utils.s3_backup import backup_all_to_s3
+    backup_all_to_s3()
+    print('✅ S3 backup (database + memes) completed successfully')
 except Exception as e:
     print(f'❌ S3 backup failed: {e}')
     # Не останавливаем деплой если S3 бэкап не удался
@@ -92,7 +103,7 @@ fi
 # 7. Показываем статус
 echo -e "${BLUE}📊 Deployment Summary:${NC}"
 echo -e "  📥 Code updated: ${GREEN}✅${NC}"
-echo -e "  💾 Local backup: ${GREEN}✅${NC}"
-echo -e "  ☁️  S3 backup: ${GREEN}✅${NC}"
+echo -e "  💾 Local backups: ${GREEN}✅${NC} (database + memes)"
+echo -e "  ☁️  S3 backup: ${GREEN}✅${NC} (database + memes)"
 echo -e "  📦 Dependencies: ${GREEN}✅${NC}"
 echo -e "  🚀 Bot started: ${GREEN}✅${NC}"

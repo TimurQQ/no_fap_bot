@@ -1,6 +1,8 @@
 import boto3
 import os
 import json
+import zipfile
+import tempfile
 from datetime import datetime
 from botocore.exceptions import ClientError, NoCredentialsError
 from config.config import S3_ENABLED, S3_BUCKET_NAME, S3_ACCESS_KEY, S3_SECRET_KEY, S3_REGION, S3_ENDPOINT
@@ -206,6 +208,129 @@ class S3BackupManager:
         except Exception as e:
             noFapLogger.error(f"Error listing S3 backups: {e}")
             return []
+    
+    def upload_folder_as_zip(self, folder_path: str, s3_key: str) -> dict:
+        """
+        Загружает папку в S3 как ZIP архив.
+        
+        Args:
+            folder_path: Путь к папке для архивирования
+            s3_key: Ключ в S3 для сохранения архива
+            
+        Returns:
+            dict: Информация о загруженном архиве или пустой словарь при ошибке
+        """
+        if not self.enabled:
+            noFapLogger.error("S3 backup is disabled, cannot upload folder")
+            return {}
+            
+        if not os.path.exists(folder_path):
+            noFapLogger.error(f"Folder not found: {folder_path}")
+            return {}
+            
+        try:
+            # Создаем временный ZIP файл
+            with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
+                temp_zip_path = temp_zip.name
+            
+            # Архивируем папку
+            with zipfile.ZipFile(temp_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for root, dirs, files in os.walk(folder_path):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        # Сохраняем относительный путь в архиве
+                        arcname = os.path.relpath(file_path, folder_path)
+                        zipf.write(file_path, arcname)
+            
+            # Получаем информацию о созданном архиве
+            zip_size = os.path.getsize(temp_zip_path)
+            files_count = len([f for _, _, files in os.walk(folder_path) for f in files])
+            
+            # Загружаем в S3
+            self.s3_client.upload_file(temp_zip_path, self.bucket_name, s3_key)
+            
+            # Удаляем временный файл
+            os.unlink(temp_zip_path)
+            
+            upload_info = {
+                'source_folder': folder_path,
+                's3_key': s3_key,
+                'zip_size': zip_size,
+                'files_count': files_count,
+                'upload_time': datetime.now()
+            }
+            
+            noFapLogger.info(f"Folder uploaded to S3: {s3_key} ({files_count} files, {zip_size} bytes)")
+            return upload_info
+            
+        except Exception as e:
+            # Очищаем временный файл при ошибке
+            if 'temp_zip_path' in locals() and os.path.exists(temp_zip_path):
+                os.unlink(temp_zip_path)
+            noFapLogger.error(f"Error uploading folder to S3: {e}")
+            return {}
+    
+    def download_and_extract_zip(self, s3_key: str, extract_path: str) -> dict:
+        """
+        Скачивает ZIP архив из S3 и извлекает его содержимое.
+        
+        Args:
+            s3_key: Ключ ZIP архива в S3
+            extract_path: Путь для извлечения содержимого
+            
+        Returns:
+            dict: Информация о скачанном архиве или пустой словарь при ошибке
+        """
+        if not self.enabled:
+            noFapLogger.error("S3 backup is disabled, cannot download")
+            return {}
+            
+        try:
+            # Создаем временный файл для скачивания
+            with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
+                temp_zip_path = temp_zip.name
+            
+            # Скачиваем архив из S3
+            self.s3_client.download_file(self.bucket_name, s3_key, temp_zip_path)
+            
+            # Создаем директорию для извлечения
+            os.makedirs(extract_path, exist_ok=True)
+            
+            # Извлекаем архив
+            with zipfile.ZipFile(temp_zip_path, 'r') as zipf:
+                zipf.extractall(extract_path)
+                files_count = len(zipf.namelist())
+            
+            # Получаем размер архива
+            zip_size = os.path.getsize(temp_zip_path)
+            
+            # Удаляем временный файл
+            os.unlink(temp_zip_path)
+            
+            download_info = {
+                's3_key': s3_key,
+                'extract_path': extract_path,
+                'zip_size': zip_size,
+                'files_count': files_count,
+                'download_time': datetime.now()
+            }
+            
+            noFapLogger.info(f"Archive downloaded and extracted: {s3_key} -> {extract_path} ({files_count} files)")
+            return download_info
+            
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code == 'NoSuchKey':
+                noFapLogger.error(f"Archive not found in S3: {s3_key}")
+            else:
+                noFapLogger.error(f"S3 ClientError during download: {e}")
+            return {}
+        except Exception as e:
+            # Очищаем временный файл при ошибке
+            if 'temp_zip_path' in locals() and os.path.exists(temp_zip_path):
+                os.unlink(temp_zip_path)
+            noFapLogger.error(f"Error downloading archive from S3: {e}")
+            return {}
 
 
 # Создаем глобальный экземпляр менеджера
@@ -251,6 +376,83 @@ def restore_database_from_s3(database_path: str) -> None:
         )
 
 
+def backup_memes_to_s3() -> None:
+    """
+    Создает бэкап папки с мемами в S3.
+    
+    Raises:
+        RuntimeError: Если бэкап не удался
+    """
+    memes_folder = os.path.join("storage", "memes")
+    
+    if not os.path.exists(memes_folder):
+        raise RuntimeError(f"Memes folder not found: {memes_folder}")
+    
+    # Создаем ключ с временной меткой
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    s3_key = f"memes_backups/memes_{timestamp}.zip"
+    latest_key = "memes_backups/memes_latest.zip"
+    
+    # Загружаем архив с мемами
+    upload_info = s3_backup_manager.upload_folder_as_zip(memes_folder, s3_key)
+    
+    if not upload_info:
+        raise RuntimeError("Failed to upload memes backup to S3")
+    
+    # Также сохраняем как latest backup
+    latest_info = s3_backup_manager.upload_folder_as_zip(memes_folder, latest_key)
+    
+    if not latest_info:
+        noFapLogger.error("Failed to update latest memes backup")
+    else:
+        noFapLogger.info(f"Latest memes backup updated: {latest_key}")
+    
+    # Логируем детальную информацию
+    noFapLogger.info("=" * 60)
+    noFapLogger.info("📸 MEMES BACKUP REPORT")
+    noFapLogger.info("=" * 60)
+    noFapLogger.info(f"📁 Source Folder: {upload_info['source_folder']}")
+    noFapLogger.info(f"☁️ S3 Key: {upload_info['s3_key']}")
+    noFapLogger.info(f"📊 Archive Size: {upload_info['zip_size']} bytes")
+    noFapLogger.info(f"🖼️ Files Count: {upload_info['files_count']} memes")
+    noFapLogger.info(f"⏰ Upload Time: {upload_info['upload_time']}")
+    noFapLogger.info("=" * 60)
+    noFapLogger.info("✅ Memes backup completed successfully!")
+
+
+def restore_memes_from_s3(memes_folder: str) -> None:
+    """
+    Восстанавливает папку с мемами из S3.
+    
+    Args:
+        memes_folder: Путь к папке для восстановления мемов
+        
+    Raises:
+        RuntimeError: Если восстановление не удалось
+    """
+    noFapLogger.info("🔄 Starting memes restoration from S3...")
+    
+    latest_key = "memes_backups/memes_latest.zip"
+    
+    # Скачиваем и извлекаем архив
+    download_info = s3_backup_manager.download_and_extract_zip(latest_key, memes_folder)
+    
+    if not download_info:
+        raise RuntimeError("Failed to restore memes from S3 backup")
+    
+    # Логируем детальную информацию
+    noFapLogger.info("=" * 60)
+    noFapLogger.info("📸 MEMES RESTORATION REPORT")
+    noFapLogger.info("=" * 60)
+    noFapLogger.info(f"☁️ S3 Key: {download_info['s3_key']}")
+    noFapLogger.info(f"📁 Extract Path: {download_info['extract_path']}")
+    noFapLogger.info(f"📊 Archive Size: {download_info['zip_size']} bytes")
+    noFapLogger.info(f"🖼️ Files Count: {download_info['files_count']} memes")
+    noFapLogger.info(f"⏰ Download Time: {download_info['download_time']}")
+    noFapLogger.info("=" * 60)
+    noFapLogger.info("✅ Memes successfully restored from S3 backup!")
+
+
 def backup_database_to_s3():
     """
     Функция для планировщика - создает бэкап базы данных в S3.
@@ -261,3 +463,20 @@ def backup_database_to_s3():
         noFapLogger.info("Scheduled database backup to S3 completed successfully")
     else:
         noFapLogger.error("Scheduled database backup to S3 failed")
+
+
+def backup_all_to_s3():
+    """
+    Функция для планировщика - создает бэкап БД и мемов в S3.
+    """
+    try:
+        # Бэкап базы данных
+        backup_database_to_s3()
+        
+        # Бэкап мемов
+        backup_memes_to_s3()
+        
+        noFapLogger.info("🎉 Complete backup (database + memes) to S3 completed successfully!")
+        
+    except Exception as e:
+        noFapLogger.error(f"Complete backup to S3 failed: {e}")
