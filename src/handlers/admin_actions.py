@@ -42,7 +42,7 @@ async def get_black_list(message: types.Message):
     if not blacklisted_users:
         await message.answer("BlackList is empty ✅")
         return
-    
+
     # Формируем список без API вызовов - используем сохраненные usernames
     blacklist_lines = []
     for user in blacklisted_users:

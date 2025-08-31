@@ -25,7 +25,7 @@ class PingUserState(UserState):
         self.count_pings += 1
 
     def pong(self):
-        self.count_pings = max(0, self.count_pings - 1)
+        self.count_pings = 0  # Полный сброс при любом ответе
 
     def state_action(self, context, pong_flag = False):
         self._logInfo(context)
