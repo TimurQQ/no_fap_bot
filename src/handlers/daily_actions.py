@@ -9,6 +9,7 @@ import random
 import os
 from logger import noFapLogger
 import asyncio
+from src.utils.async_utils import UserProcessingStatus, run_with_semaphore
 
 random.seed(datetime.now().timestamp())
 
@@ -68,68 +69,77 @@ async def sendDailyQuestion(user, actual_nick):
     )
 
 
+async def process_single_user(user):
+    """Обработка одного пользователя. Возвращает статус обработки."""
+    days = (datetime.now() - user.lastTimeFap).days
+
+    if (days < 0 or user.isBlocked): 
+        return UserProcessingStatus.SKIPPED
+    
+    # Пропускаем пользователей, которые недавно вызывали ошибки
+    if user.uid in _problematic_users_cache:
+        return UserProcessingStatus.SKIPPED
+
+    # Безопасное получение информации о чате с обработкой ошибок
+    try:
+        chat = await bot.get_chat(user.uid)
+        actual_nick = chat.username
+        database.update(user.uid, newNickName=actual_nick)
+    except (ChatNotFound, BotBlocked) as err:
+        noFapLogger.warning(f'User {user.username}({user.uid}) is not accessible: {err}. Marking as blocked.')
+        database.update(user.uid, bannedFlag=True)
+        _problematic_users_cache.add(user.uid)
+        return UserProcessingStatus.BLOCKED
+    except TelegramAPIError as err:
+        noFapLogger.error(f'Telegram API error for user {user.username}({user.uid}): {err}. Skipping this user.')
+        _problematic_users_cache.add(user.uid)
+        return UserProcessingStatus.ERROR
+
+    new_day = 0
+    last_day = 0
+    if len(user.collectedMemes) != 0:
+        last_day = int(user.collectedMemes[-1].split()[1].split("_")[0])
+        new_day = min(last_day + 1, days)
+        if last_day == new_day:
+            return UserProcessingStatus.SKIPPED
+
+    if (new_day in database.cached_memes):
+        database.update(user.uid, winnerFlag=False)
+        await sendMemeToUser(user, new_day)
+    elif (not user.isWinner):
+        database.update(user.uid, winnerFlag=True)
+        await send_message_safety(user, f"Not enough memes for you :(", reply_markup=menu_kb)
+    else:
+        return UserProcessingStatus.SKIPPED
+
+    if days - last_day == 1:
+        await sendDailyQuestion(user, actual_nick)
+    
+    return UserProcessingStatus.PROCESSED
+
+
 async def checkRating():
     users_count = len(database.data)
-    noFapLogger.info(f"Starting checkRating for {users_count} users")
+    noFapLogger.info(f"Starting async checkRating for {users_count} users")
     
     if users_count == 0:
         noFapLogger.info("No users in database, skipping checkRating")
         return
     
-    processed_users = 0
-    blocked_users = 0
-    error_users = 0
+    # Создаем задачи для параллельной обработки пользователей
+    tasks = [process_single_user(user) for user in database.data.values()]
     
-    for user in database.data.values():
-        days = (datetime.now() - user.lastTimeFap).days
-
-        if (days < 0 or user.isBlocked): continue
-        
-        # Пропускаем пользователей, которые недавно вызывали ошибки
-        if user.uid in _problematic_users_cache:
-            continue
-
-        # Безопасное получение информации о чате с обработкой ошибок
-        try:
-            chat = await bot.get_chat(user.uid)
-            actual_nick = chat.username
-            database.update(user.uid, newNickName=actual_nick)
-        except (ChatNotFound, BotBlocked) as err:
-            noFapLogger.warning(f'User {user.username}({user.uid}) is not accessible: {err}. Marking as blocked.')
-            database.update(user.uid, bannedFlag=True)
-            _problematic_users_cache.add(user.uid)
-            blocked_users += 1
-            continue
-        except TelegramAPIError as err:
-            noFapLogger.error(f'Telegram API error for user {user.username}({user.uid}): {err}. Skipping this user.')
-            _problematic_users_cache.add(user.uid)
-            error_users += 1
-            continue
-        
-        processed_users += 1
-
-        new_day = 0
-        last_day = 0
-        if len(user.collectedMemes) != 0:
-            last_day = int(user.collectedMemes[-1].split()[1].split("_")[0])
-            new_day = min(last_day + 1, days)
-            if last_day == new_day:
-                continue
-
-        if (new_day in database.cached_memes):
-            database.update(user.uid, winnerFlag=False)
-            await sendMemeToUser(user, new_day)
-        elif (not user.isWinner):
-            database.update(user.uid, winnerFlag=True)
-            await send_message_safety(user, f"Not enough memes for you :(", reply_markup=menu_kb)
-        else:
-            continue
-
-        if days - last_day == 1:
-            await sendDailyQuestion(user, actual_nick)
+    # Выполняем все задачи параллельно с ограничением (max 10 одновременно)
+    results = await run_with_semaphore(tasks, max_concurrent=10)
+    
+    # Подсчитываем статистику
+    processed_users = results.count(UserProcessingStatus.PROCESSED)
+    blocked_users = results.count(UserProcessingStatus.BLOCKED) 
+    error_users = results.count(UserProcessingStatus.ERROR)
+    skipped_users = results.count(UserProcessingStatus.SKIPPED)
     
     database.update()
-    noFapLogger.info(f"checkRating completed: {processed_users} processed, {blocked_users} blocked, {error_users} errors")
+    noFapLogger.info(f"Async checkRating completed: {processed_users} processed, {blocked_users} blocked, {error_users} errors, {skipped_users} skipped")
 
 
 async def send_message_safety(user, message, reply_markup, on_success = lambda: {}):
