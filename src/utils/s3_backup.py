@@ -57,7 +57,7 @@ class S3BackupManager:
             bool: True если загрузка успешна, False в противном случае
         """
         if not self.enabled:
-            noFapLogger.error("S3 backup is disabled, skipping upload")
+            noFapLogger.warning("S3 backup is disabled, skipping upload")
             return False
             
         if not os.path.exists(database_file_path):
@@ -122,7 +122,7 @@ class S3BackupManager:
             dict: Информация о скачанном бэкапе или пустой словарь при ошибке
         """
         if not self.enabled:
-            noFapLogger.error("S3 backup is disabled, cannot download")
+            noFapLogger.warning("S3 backup is disabled, cannot download")
             return {}
             
         try:
@@ -221,7 +221,7 @@ class S3BackupManager:
             dict: Информация о загруженном архиве или пустой словарь при ошибке
         """
         if not self.enabled:
-            noFapLogger.error("S3 backup is disabled, cannot upload folder")
+            noFapLogger.warning("S3 backup is disabled, cannot upload folder")
             return {}
             
         if not os.path.exists(folder_path):
@@ -282,7 +282,7 @@ class S3BackupManager:
             dict: Информация о скачанном архиве или пустой словарь при ошибке
         """
         if not self.enabled:
-            noFapLogger.error("S3 backup is disabled, cannot download")
+            noFapLogger.warning("S3 backup is disabled, cannot download")
             return {}
             
         try:

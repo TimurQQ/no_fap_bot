@@ -12,6 +12,10 @@ from src.constants import LOG_FILENAME, LOGS_FOLDER, NO_FAP_LOGGER_NAME, SCHEDUL
 from singleton_decorator import singleton
 
 class NoFapTimedRotatingFileHandler(TimedRotatingFileHandler):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._logsSender = None
+        
     def setLogsSender(self, logsSender):
         self._logsSender = logsSender
 
@@ -83,6 +87,9 @@ class NoFapLogger(object):
 
     def error(self, text: str):
         self._commandLogger.error(text)
+    
+    def warning(self, text: str):
+        self._commandLogger.warning(text)
 
     def info_message(self, message: aiogram.types.Message):
         chat = message.chat

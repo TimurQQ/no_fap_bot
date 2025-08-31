@@ -100,11 +100,11 @@ class NoFapDB:
                 memes_count = len([f for f in os.listdir(memes_path) if os.path.isfile(os.path.join(memes_path, f))])
                 noFapLogger.info(f"✅ Memes successfully restored from S3: {memes_count} files")
             else:
-                noFapLogger.error("⚠️ Memes folder is still empty after S3 restoration")
+                noFapLogger.warning("⚠️ Memes folder is still empty after S3 restoration")
                 
         except Exception as e:
             from logger import noFapLogger
-            noFapLogger.error(f"⚠️ Failed to restore memes from S3: {e}")
+            noFapLogger.warning(f"⚠️ Failed to restore memes from S3: {e}")
             noFapLogger.info("🎭 Bot will continue without memes (they can be restored later)")
             # Не падаем с ошибкой - мемы не критичны для работы бота
             # Создаем пустую папку чтобы избежать ошибок
