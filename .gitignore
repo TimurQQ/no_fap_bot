@@ -145,3 +145,4 @@ storage/
 backup/
 logs/*
 !logs/.gitkeep
+backup/
