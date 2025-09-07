@@ -2,6 +2,9 @@ from dispatcher import dp, bot
 from aiogram import types
 from database import database
 from commands import commands
+import os
+from src.constants import LOGS_FOLDER
+from no_fap import send_logs
 
 @dp.message_handler(is_admin=True, commands=['ban'])
 async def ban_user(message: types.Message):
@@ -61,3 +64,33 @@ async def get_black_list(message: types.Message):
             await message.answer(chunk)
         else:
             await message.answer(f"BlackList (continued):\n{chunk}")
+
+@dp.message_handler(is_admin=True, commands=['get_logs'])
+async def send_logs_manually(message: types.Message):
+    """Ручная отправка логов админам"""
+    try:
+        # Найдем последний файл логов
+        log_files = [f for f in os.listdir(LOGS_FOLDER) 
+                    if f.startswith('log.') and os.path.isfile(os.path.join(LOGS_FOLDER, f))]
+        
+        if not log_files:
+            await message.answer("❌ Нет файлов логов для отправки")
+            return
+        
+        # Берем последний файл
+        latest_log = sorted(log_files)[-1]
+        log_path = os.path.join(LOGS_FOLDER, latest_log)
+        
+        await message.answer(f"📤 Отправляю лог файл: {latest_log}")
+        
+        # Отправляем лог
+        await send_logs(log_path)
+        
+        await message.answer(f"✅ Лог файл {latest_log} успешно отправлен всем админам!")
+        
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при отправке логов: {e}")
+
+@dp.message_handler(is_admin=False, commands=['get_logs'])
+async def send_logs_no_admin(message: types.Message):
+    await message.answer("❌ У вас нет прав администратора для выполнения /get_logs")

@@ -23,17 +23,35 @@ class NoFapTimedRotatingFileHandler(TimedRotatingFileHandler):
         super().doRollover()
 
         if self._logsSender:
-            loop = asyncio.get_running_loop()
+            try:
+                # Пытаемся получить текущий event loop
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                # Если нет активного loop, создаем новый
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
 
             target = sorted(os.listdir(LOGS_FOLDER))[-1]
+            target_path = os.path.join(LOGS_FOLDER, target)
 
-            task = loop.create_task(self._logsSender(os.path.join(LOGS_FOLDER, target)))
-            task.add_done_callback(
-                lambda _: shutil.move(
-                        os.path.join(LOGS_FOLDER, target),
-                        os.path.join(BACKUP_FOLDER, f"{target}-{datetime.now().timestamp()}")
-                    )
-            )
+            # Создаем задачу для отправки логов
+            async def send_and_move():
+                try:
+                    await self._logsSender(target_path)
+                    # После успешной отправки перемещаем файл в backup
+                    backup_path = os.path.join(BACKUP_FOLDER, f"{target}-{datetime.now().timestamp()}")
+                    shutil.move(target_path, backup_path)
+                    print(f"📤 Лог {target} отправлен админам и перемещен в backup")
+                except Exception as e:
+                    print(f"❌ Ошибка при отправке лога {target}: {e}")
+
+            # Запускаем задачу
+            if loop.is_running():
+                # Если loop уже запущен, создаем task
+                loop.create_task(send_and_move())
+            else:
+                # Если loop не запущен, запускаем синхронно
+                loop.run_until_complete(send_and_move())
 
 @singleton
 class NoFapLogger(object):
