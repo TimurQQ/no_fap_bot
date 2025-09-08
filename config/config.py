@@ -1,4 +1,5 @@
 from os import getenv
+
 from dotenv import load_dotenv
 
 # Загружаем переменные из .env файла
@@ -18,4 +19,8 @@ S3_ENDPOINT = getenv("S3_ENDPOINT", "")
 
 # Admin Configuration
 admins_str = getenv("ADMINS", "")
-ADMINS = set(int(x.strip()) for x in admins_str.split(",") if x.strip().isdigit()) if admins_str else set()
+ADMINS = (
+    set(int(x.strip()) for x in admins_str.split(",") if x.strip().isdigit())
+    if admins_str
+    else set()
+)

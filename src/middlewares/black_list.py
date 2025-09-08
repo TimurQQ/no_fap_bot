@@ -1,8 +1,11 @@
-from aiogram import types
-from aiogram.dispatcher.middlewares import BaseMiddleware
-from aiogram.dispatcher.handler import CancelHandler
-from database import database
 from datetime import datetime
+
+from aiogram import types
+from aiogram.dispatcher.handler import CancelHandler
+from aiogram.dispatcher.middlewares import BaseMiddleware
+
+from database import database
+
 
 class BlackListMiddleware(BaseMiddleware):
     def __init__(self):
@@ -12,8 +15,8 @@ class BlackListMiddleware(BaseMiddleware):
         if message.chat.id in database.getBlackListUIDs():
             userStat = database.getStatById(message.chat.id)
             await message.answer(
-                "Your statistics: \n" +
-                f"@{userStat.username} Stat: {datetime.now() - userStat.lastTimeFap}"
-                , reply_markup=types.ReplyKeyboardRemove()
+                "Your statistics: \n"
+                + f"@{userStat.username} Stat: {datetime.now() - userStat.lastTimeFap}",
+                reply_markup=types.ReplyKeyboardRemove(),
             )
             raise CancelHandler()

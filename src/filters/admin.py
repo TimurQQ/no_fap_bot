@@ -1,6 +1,8 @@
 from aiogram import types
 from aiogram.dispatcher.filters import BoundFilter
+
 from config.config import ADMINS
+
 
 class IsAdminFilter(BoundFilter):
     key = "is_admin"

@@ -1,11 +1,13 @@
 import logging
+
 from aiogram import Bot, Dispatcher
 from aiogram.bot.api import TelegramAPIServer
-from config.config import BOT_TOKEN, USE_LOCAL_SERVER, LOCAL_SERVER_URL
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
+from config.config import BOT_TOKEN, LOCAL_SERVER_URL, USE_LOCAL_SERVER
 from src.filters.admin import IsAdminFilter
-from src.middlewares.logging import LoggingMiddleware
 from src.middlewares.black_list import BlackListMiddleware
+from src.middlewares.logging import LoggingMiddleware
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

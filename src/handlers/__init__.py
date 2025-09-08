@@ -1,6 +1,3 @@
-from . import admin_actions
-from . import calendar_actions
-from . import daily_actions
-from . import meme_actions
-from . import statistics
+from . import admin_actions, calendar_actions, daily_actions, meme_actions, statistics
+
 print("Import handlers")

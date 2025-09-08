@@ -1,4 +1,4 @@
-#This file contains constants for command representation in bot
+# This file contains constants for command representation in bot
 class Commands:
     def __init__(self):
         self.HelpCommand = "help"

@@ -1,27 +1,36 @@
+import asyncio
+import json
+import logging
 import os
 import re
-import json
-import aiogram
-import asyncio
-import logging
 import shutil
-from src.utils.json_encoder import EnhancedJSONEncoder
+from datetime import datetime, time
 from logging.handlers import TimedRotatingFileHandler
-from datetime import time, datetime
-from src.constants import LOG_FILENAME, LOGS_FOLDER, NO_FAP_LOGGER_NAME, SCHEDULER_LOGGER_NAME, BACKUP_FOLDER
+
+import aiogram
 from singleton_decorator import singleton
+
+from src.constants import (
+    BACKUP_FOLDER,
+    LOG_FILENAME,
+    LOGS_FOLDER,
+    NO_FAP_LOGGER_NAME,
+    SCHEDULER_LOGGER_NAME,
+)
+from src.utils.json_encoder import EnhancedJSONEncoder
+
 
 class NoFapTimedRotatingFileHandler(TimedRotatingFileHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._logsSender = None
-        
+
     def setLogsSender(self, logsSender):
         self._logsSender = logsSender
 
     def doRollover(self):
         super().doRollover()
-        
+
         logger = logging.getLogger(NO_FAP_LOGGER_NAME)
         logger.info("🔄 Начинается процесс ротации логов")
 
@@ -40,7 +49,7 @@ class NoFapTimedRotatingFileHandler(TimedRotatingFileHandler):
             target = sorted(os.listdir(LOGS_FOLDER))[-1]
             target_path = os.path.join(LOGS_FOLDER, target)
             logger.info(f"📄 Найден файл лога для отправки: {target}")
-            
+
             if not os.path.exists(target_path):
                 logger.error(f"❌ Файл лога не существует: {target_path}")
                 return
@@ -51,30 +60,46 @@ class NoFapTimedRotatingFileHandler(TimedRotatingFileHandler):
                     logger.info(f"📤 Начинается отправка лога {target} админам")
                     await self._logsSender(target_path)
                     logger.info(f"✅ Лог {target} успешно отправлен админам")
-                    
+
                     # После успешной отправки перемещаем файл в backup
                     if not os.path.exists(BACKUP_FOLDER):
                         os.makedirs(BACKUP_FOLDER)
                         logger.info(f"📁 Создана папка backup: {BACKUP_FOLDER}")
-                    
-                    backup_path = os.path.join(BACKUP_FOLDER, f"{target}-{datetime.now().timestamp()}")
+
+                    backup_path = os.path.join(
+                        BACKUP_FOLDER, f"{target}-{datetime.now().timestamp()}"
+                    )
                     shutil.move(target_path, backup_path)
-                    logger.info(f"📤 Лог {target} отправлен админам и перемещен в backup: {backup_path}")
+                    logger.info(
+                        f"📤 Лог {target} отправлен админам и перемещен в backup: {backup_path}"
+                    )
                 except Exception as e:
                     logger.error(f"❌ Ошибка при отправке лога {target}: {e}")
                     logger.error(f"❌ Детали ошибки: {type(e).__name__}: {str(e)}")
 
             # Запускаем задачу
             if loop.is_running():
-                # Если loop уже запущен, создаем task
-                logger.info("⚙️ Loop запущен, создается task")
-                loop.create_task(send_and_move())
+                logger.info("⚙️ Loop запущен, создается и ожидается выполнение task")
+                task = loop.create_task(send_and_move())
+                # Добавляем callback для логирования результата
+                task.add_done_callback(
+                    lambda t: (
+                        logger.info("✅ Task отправки логов завершен")
+                        if not t.exception()
+                        else logger.error(
+                            f"❌ Task отправки логов завершен с ошибкой: {t.exception()}"
+                        )
+                    )
+                )
             else:
                 # Если loop не запущен, запускаем синхронно
                 logger.info("⚙️ Loop не запущен, выполняется синхронно")
                 loop.run_until_complete(send_and_move())
         else:
-            logger.warning("⚠️ logsSender не установлен! Логи не будут отправлены админам")
+            logger.warning(
+                "⚠️ logsSender не установлен! Логи не будут отправлены админам"
+            )
+
 
 @singleton
 class NoFapLogger(object):
@@ -112,8 +137,11 @@ class NoFapLogger(object):
 
         formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
-        self._file_handler = NoFapTimedRotatingFileHandler(filename=os.path.join(LOGS_FOLDER, LOG_FILENAME),
-                                                           when="midnight", atTime=time(hour=22, minute=00))
+        self._file_handler = NoFapTimedRotatingFileHandler(
+            filename=os.path.join(LOGS_FOLDER, LOG_FILENAME),
+            when="midnight",
+            atTime=time(hour=22, minute=00),
+        )
         self._file_handler.setLevel(logging.INFO)
         self._file_handler.setFormatter(formatter)
 
@@ -122,14 +150,16 @@ class NoFapLogger(object):
 
     def setLoggerSender(self, loggerSender):
         self._file_handler.setLogsSender(loggerSender)
-        self._commandLogger.info(f"✅ logsSender установлен: {loggerSender.__name__ if hasattr(loggerSender, '__name__') else 'функция без имени'}")
+        self._commandLogger.info(
+            f"✅ logsSender установлен: {loggerSender.__name__ if hasattr(loggerSender, '__name__') else 'функция без имени'}"
+        )
 
     def info(self, text: str):
         self._commandLogger.info(text)
 
     def error(self, text: str):
         self._commandLogger.error(text)
-    
+
     def warning(self, text: str):
         self._commandLogger.warning(text)
 
@@ -140,5 +170,9 @@ class NoFapLogger(object):
         self.info(f'User {chat.username} ({chat.id}) send a message: "{messageText}"')
 
     def logDatabase(self, data):
-        data_log = re.sub(r'"collectedMemes": \[[^]]*\],\s+', "", json.dumps(data, cls=EnhancedJSONEncoder, indent=4))
+        data_log = re.sub(
+            r'"collectedMemes": \[[^]]*\],\s+',
+            "",
+            json.dumps(data, cls=EnhancedJSONEncoder, indent=4),
+        )
         self.info(f"{data_log}")

@@ -16,6 +16,11 @@ APScheduler = "^3.10.1"
 python-dotenv = "^1.1.1"
 boto3 = "^1.40.21"
 
+[tool.poetry.group.dev.dependencies]
+black = "^25.1.0"
+isort = "^6.0.1"
+pre-commit = "^4.3.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
