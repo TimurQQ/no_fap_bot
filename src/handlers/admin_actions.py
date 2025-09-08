@@ -5,8 +5,8 @@ from aiogram import types
 from commands import commands
 from database import database
 from dispatcher import bot, dp
-from no_fap import send_logs
 from src.constants import LOGS_FOLDER
+from src.utils.log_sender import send_logs
 
 
 @dp.message_handler(is_admin=True, commands=["ban"])
