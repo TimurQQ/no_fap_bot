@@ -1,7 +1,6 @@
 from aiogram import types
 from aiogram.dispatcher.filters import BoundFilter
-
-admins = {464237994, 930629580}
+from config.config import ADMINS
 
 class IsAdminFilter(BoundFilter):
     key = "is_admin"
@@ -10,4 +9,7 @@ class IsAdminFilter(BoundFilter):
         self.is_admin = is_admin
 
     async def check(self, message: types.Message):
-        return message.chat.id in admins
+        # Если список админов пустой, никто не является админом
+        if not ADMINS:
+            return False
+        return message.chat.id in ADMINS

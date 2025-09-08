@@ -15,3 +15,7 @@ S3_ACCESS_KEY = getenv("S3_ACCESS_KEY", "")
 S3_SECRET_KEY = getenv("S3_SECRET_KEY", "")
 S3_REGION = getenv("S3_REGION", "us-east-1")
 S3_ENDPOINT = getenv("S3_ENDPOINT", "")
+
+# Admin Configuration
+admins_str = getenv("ADMINS", "")
+ADMINS = set(int(x.strip()) for x in admins_str.split(",") if x.strip().isdigit()) if admins_str else set()
