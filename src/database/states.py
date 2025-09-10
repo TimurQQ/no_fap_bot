@@ -1,4 +1,5 @@
 import json
+from typing import Callable
 
 from logger import noFapLogger
 
@@ -18,7 +19,7 @@ class UserState:
 
 
 class PingUserState(UserState):
-    def __init__(self, default_count=0, max_count=3):
+    def __init__(self, default_count: int = 0, max_count: int = 3):
         self.count_pings = default_count
         self.max_count = max_count
 
@@ -59,7 +60,7 @@ class UserContext:
         )
         self.state.state_action(self, pong_flag=True)
 
-    def addRefreshCallback(self, callback):
+    def addRefreshCallback(self, callback: Callable):
         self.refresh_callback = callback
 
     def refresh(self):

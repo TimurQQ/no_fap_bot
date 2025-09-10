@@ -6,7 +6,7 @@ from dispatcher import bot
 from logger import noFapLogger
 
 
-async def send_logs(logsFilePath):
+async def send_logs(logsFilePath: str):
     noFapLogger.info(f"📤 Начинается отправка лога {logsFilePath} админам")
 
     # Проверяем, есть ли админы

@@ -1,6 +1,7 @@
 import json
 import os
 from datetime import datetime
+from typing import List, Optional, Tuple
 
 import dateutil.parser
 
@@ -128,7 +129,7 @@ class NoFapDB:
             # Создаем пустую папку чтобы избежать ошибок
             os.makedirs(memes_path, exist_ok=True)
 
-    def getBlackList(self):
+    def getBlackList(self) -> List[UserStat]:
         """Возвращает список заблокированных пользователей с их ID и usernames"""
         banned_users = []
         for uid, user_stat in self.data.items():
@@ -138,7 +139,7 @@ class NoFapDB:
                 )
         return banned_users
 
-    def getBlackListUIDs(self):
+    def getBlackListUIDs(self) -> set:
         """Возвращает только UID'ы заблокированных пользователей (для обратной совместимости)"""
         bannedUIDs = map(
             lambda item: item[0],
@@ -146,10 +147,10 @@ class NoFapDB:
         )
         return set(bannedUIDs)
 
-    def __contains__(self, uid):
+    def __contains__(self, uid: int) -> bool:
         return uid in self.data
 
-    def addNewUser(self, uid, username, lastTimeFap):
+    def addNewUser(self, uid: int, username: str, lastTimeFap: datetime):
         self.data[uid] = UserStat(uid, username, lastTimeFap, list(), False, False)
         userContext = UserContext(int(uid))
         userContext.addRefreshCallback(callback=self.refresh_user)
@@ -157,13 +158,13 @@ class NoFapDB:
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder, indent=4)
 
-    def getStatById(self, uid):
+    def getStatById(self, uid: int) -> UserStat:
         return self.data[uid]
 
-    def refresh_user(self, uid):
+    def refresh_user(self, uid: int):
         self.data[uid].lastTimeFap = datetime.now()
 
-    def getUserIDFromNick(self, nickname):
+    def getUserIDFromNick(self, nickname: str) -> Optional[int]:
         filtered = list(
             filter(lambda uStat: uStat[1].username == nickname, self.data.items())
         )
@@ -196,7 +197,9 @@ class NoFapDB:
         with open(self.file_storage_path, "w") as f:
             json.dump(self.data, f, cls=EnhancedJSONEncoder, indent=4)
 
-    def getTop(self, page=0, caller=-1):
+    def getTop(
+        self, page: int = 0, caller: int = -1
+    ) -> Tuple[List[UserStat], Tuple[int, UserStat]]:
         filter_func = lambda user: not user.isBlocked and (
             user.username or user.uid == int(caller)
         )

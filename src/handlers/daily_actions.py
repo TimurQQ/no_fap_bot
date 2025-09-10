@@ -2,6 +2,7 @@ import asyncio
 import os
 import random
 from datetime import datetime
+from typing import Callable, List
 
 from aiogram import types
 from aiogram.dispatcher.filters import Text
@@ -15,6 +16,7 @@ from aiogram.utils.exceptions import (
 from database import database
 from dispatcher import bot, dp
 from logger import noFapLogger
+from src.database.user_stat import UserStat
 from src.keyboard import menu_kb, reply_kb
 from src.utils.async_utils import UserProcessingStatus, run_with_semaphore
 
@@ -55,7 +57,7 @@ async def fapping_reply(message: types.Message):
     await message.reply(message_text, reply_markup=menu_kb)
 
 
-async def sendMemeToUser(user, new_day):
+async def sendMemeToUser(user: UserStat, new_day: int):
     day_memes = database.cached_memes[new_day]
     new_meme = random.choice(day_memes)
     user.collectedMemes.append(new_meme)
@@ -69,7 +71,7 @@ async def sendMemeToUser(user, new_day):
     await send_photo_safety(user.uid, new_meme)
 
 
-async def sendDailyQuestion(user, actual_nick):
+async def sendDailyQuestion(user: UserStat, actual_nick: str):
     if user.uid in database.getBlackListUIDs():
         noFapLogger.info(f'User: "{actual_nick}" has been banned by bot!')
         return
@@ -86,7 +88,7 @@ async def sendDailyQuestion(user, actual_nick):
     )
 
 
-async def process_single_user(user):
+async def process_single_user(user: UserStat) -> UserProcessingStatus:
     """Обработка одного пользователя. Возвращает статус обработки."""
     days = (datetime.now() - user.lastTimeFap).days
 
@@ -167,7 +169,9 @@ async def checkRating():
     )
 
 
-async def send_message_safety(user, message, reply_markup, on_success=lambda: {}):
+async def send_message_safety(
+    user: UserStat, message: str, reply_markup, on_success: Callable = lambda: {}
+):
     chat_id = user.uid
     try:
         await bot.send_message(chat_id, message, reply_markup=reply_markup)
@@ -183,7 +187,7 @@ async def send_message_safety(user, message, reply_markup, on_success=lambda: {}
         noFapLogger.error(f'"{err}" While sending to user {user.username}({user.uid})')
 
 
-async def send_photo_safety(chat_id, file_name):
+async def send_photo_safety(chat_id: int, file_name: str):
     with open(os.path.join("storage", "memes", file_name), "rb") as meme_pic:
         try:
             await bot.send_photo(chat_id, meme_pic)

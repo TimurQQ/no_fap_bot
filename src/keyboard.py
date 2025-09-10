@@ -37,7 +37,7 @@ choosepage_cb = CallbackData(
 )  # post:<action>:<amount>
 
 
-def getInlineSlider(num_page=0, caller=-1):
+def getInlineSlider(num_page: int = 0, caller: int = -1) -> InlineKeyboardMarkup:
     inline_page_kb = InlineKeyboardMarkup().row(
         InlineKeyboardButton(
             "◀",

@@ -1,5 +1,6 @@
 import asyncio
 from enum import Enum
+from typing import Any, List
 
 
 class UserProcessingStatus(Enum):
@@ -11,7 +12,7 @@ class UserProcessingStatus(Enum):
     SKIPPED = "skipped"
 
 
-async def run_with_semaphore(tasks, max_concurrent=10):
+async def run_with_semaphore(tasks: List[Any], max_concurrent: int = 10) -> List[Any]:
     """
     Выполняет список задач с ограничением на количество одновременных выполнений.
 
@@ -24,7 +25,7 @@ async def run_with_semaphore(tasks, max_concurrent=10):
     """
     semaphore = asyncio.Semaphore(max_concurrent)
 
-    async def limited_process(task):
+    async def limited_process(task: Any) -> Any:
         async with semaphore:
             return await task
 

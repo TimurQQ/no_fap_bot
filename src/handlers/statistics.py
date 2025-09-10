@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import List, Tuple
 
 from aiogram import types
 from aiogram.dispatcher.filters import Text
@@ -9,7 +10,7 @@ from dispatcher import bot, dp
 from src.keyboard import choosepage_cb, getInlineSlider
 
 
-def make_statistics_message(topListPart, callerStat, page):
+def make_statistics_message(topListPart: List, callerStat: Tuple, page: int) -> str:
     return (
         f"Statistics ({page*10 + 1}-{(page + 1)*10}):\n"
         + "\n".join(
