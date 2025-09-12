@@ -152,14 +152,21 @@ async def set_log_rotation_time(message: types.Message):
             return
 
         # Обновляем время в конфигурации и планировщике
-        logger_updated = noFapLogger.update_rotation_time(hour, minute)
+        # Ротация на 1 минуту раньше записи данных для гарантии срабатывания
+        rotation_minute = (minute - 1) % 60
+        rotation_hour = hour if minute > 0 else (hour - 1) % 24
+
+        logger_updated = noFapLogger.update_rotation_time(
+            rotation_hour, rotation_minute
+        )
         scheduler_updated = update_logging_schedule(hour, minute)
 
         if logger_updated and scheduler_updated:
             await message.answer(
                 f"✅ Время ротации логов обновлено!\n\n"
-                f"🕐 Новое время: {hour:02d}:{minute:02d} (МСК)\n"
-                f"📤 Логи будут отправляться ежедневно в это время\n"
+                f"🕐 Время отправки логов: {hour:02d}:{minute:02d} (МСК)\n"
+                f"🔄 Ротация файлов: {rotation_hour:02d}:{rotation_minute:02d} (МСК)\n"
+                f"📤 Логи будут отправляться ежедневно в указанное время\n"
                 f"⚡ Изменения применены немедленно (без перезапуска)"
             )
         elif logger_updated:
