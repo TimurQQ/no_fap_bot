@@ -11,6 +11,7 @@ from typing import Callable, Optional, Tuple
 import aiogram
 from singleton_decorator import singleton
 
+from config.log_rotation_config import LogRotationConfig
 from src.constants import (
     BACKUP_FOLDER,
     LOG_FILENAME,
@@ -22,9 +23,10 @@ from src.utils.json_encoder import EnhancedJSONEncoder
 
 
 class NoFapTimedRotatingFileHandler(TimedRotatingFileHandler):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, rotation_config: LogRotationConfig, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._logsSender = None
+        self.rotation_config = rotation_config
 
     def setLogsSender(self, logsSender: Callable):
         self._logsSender = logsSender
@@ -71,49 +73,12 @@ class NoFapTimedRotatingFileHandler(TimedRotatingFileHandler):
     def _schedule_log_sending(
         self, target_path: str, target_name: str, logger: logging.Logger
     ):
-        """Планирует отправку лога с учетом текущего event loop"""
+        """Отправляет лог используя asyncio.run"""
         try:
-            # Пытаемся использовать существующий loop
-            loop = asyncio.get_running_loop()
-            logger.info("⚙️ Используется существующий event loop")
-            self._create_async_task(loop, target_path, target_name, logger)
-        except RuntimeError:
-            # Создаем новый loop для синхронного выполнения
-            logger.info("⚙️ Нет активного loop, создается новый для выполнения")
-            self._run_in_new_loop(target_path, target_name, logger)
-
-    def _create_async_task(
-        self,
-        loop: asyncio.AbstractEventLoop,
-        target_path: str,
-        target_name: str,
-        logger: logging.Logger,
-    ):
-        """Создает асинхронную задачу в существующем loop"""
-        task = loop.create_task(
-            self._send_log_file_to_admins(target_path, target_name, logger)
-        )
-        task.add_done_callback(
-            lambda t: (
-                logger.info("✅ Task отправки логов завершен")
-                if not t.exception()
-                else logger.error(
-                    f"❌ Task отправки логов завершен с ошибкой: {t.exception()}"
-                )
-            )
-        )
-
-    def _run_in_new_loop(
-        self, target_path: str, target_name: str, logger: logging.Logger
-    ):
-        """Выполняет отправку в новом event loop"""
-        new_loop = asyncio.new_event_loop()
-        try:
-            new_loop.run_until_complete(
-                self._send_log_file_to_admins(target_path, target_name, logger)
-            )
-        finally:
-            new_loop.close()
+            logger.info("⚙️ Запуск отправки логов через asyncio.run")
+            asyncio.run(self._send_log_file_to_admins(target_path, target_name, logger))
+        except Exception as e:
+            logger.error(f"❌ Ошибка при отправке логов: {e}")
 
     def doRollover(self):
         super().doRollover()
@@ -175,10 +140,13 @@ class NoFapLogger(object):
 
         formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
+        self._rotation_config = LogRotationConfig()
+
         self._file_handler = NoFapTimedRotatingFileHandler(
+            rotation_config=self._rotation_config,
             filename=os.path.join(LOGS_FOLDER, LOG_FILENAME),
             when="midnight",
-            atTime=time(hour=22, minute=00),
+            atTime=self._rotation_config.get_time_object(),
         )
         self._file_handler.setLevel(logging.INFO)
         self._file_handler.setFormatter(formatter)
@@ -191,6 +159,26 @@ class NoFapLogger(object):
         self._commandLogger.info(
             f"✅ logsSender установлен: {loggerSender.__name__ if hasattr(loggerSender, '__name__') else 'функция без имени'}"
         )
+
+    def update_rotation_time(self, hour: int, minute: int) -> bool:
+        """Обновляет время ротации логов"""
+        try:
+            if not self._rotation_config.set_rotation_time(hour, minute):
+                return False
+
+            self._file_handler.atTime = self._rotation_config.get_time_object()
+            self._commandLogger.info(
+                f"⏰ Время ротации логов обновлено на {self._rotation_config.format_time()}"
+            )
+            return True
+
+        except Exception as e:
+            self._commandLogger.error(f"❌ Ошибка при обновлении времени ротации: {e}")
+            return False
+
+    def get_current_rotation_time(self) -> str:
+        """Возвращает текущее время ротации логов"""
+        return self._rotation_config.format_time()
 
     def info(self, text: str):
         self._commandLogger.info(text)

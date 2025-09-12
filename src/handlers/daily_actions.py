@@ -2,7 +2,7 @@ import asyncio
 import os
 import random
 from datetime import datetime
-from typing import Callable, List
+from typing import Callable
 
 from aiogram import types
 from aiogram.dispatcher.filters import Text

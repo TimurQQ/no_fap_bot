@@ -7,48 +7,26 @@ from logger import noFapLogger
 
 
 async def send_logs(logsFilePath: str):
-    noFapLogger.info(f"📤 Начинается отправка лога {logsFilePath} админам")
-
-    # Проверяем, есть ли админы
+    """Отправляет лог файл всем админам"""
     if not ADMINS:
-        noFapLogger.error("❌ Список админов пустой! Лог не будет отправлен.")
-        noFapLogger.error("❌ Проверьте переменную ADMINS в .env файле")
+        noFapLogger.error(
+            "❌ Список админов пустой! Проверьте переменную ADMINS в .env файле"
+        )
         return
 
-    # Проверяем существование файла
     if not os.path.exists(logsFilePath):
         noFapLogger.error(f"❌ Файл лога не существует: {logsFilePath}")
         return
 
-    # Проверяем размер файла
-    try:
-        file_size = os.path.getsize(logsFilePath)
-        noFapLogger.info(f"📊 Размер файла лога: {file_size} байт")
-    except Exception as e:
-        noFapLogger.error(f"❌ Ошибка при получении размера файла: {e}")
-        return
-
-    noFapLogger.info(f"👥 Список админов: {list(ADMINS)}")
-
     success_count = 0
-    total_admins = len(ADMINS)
+    filename = f"{os.path.basename(logsFilePath)}-{datetime.now().timestamp()}"
 
     for admin in ADMINS:
         try:
-            noFapLogger.info(f"📤 Отправка лога админу {admin}")
-            await bot.send_document(
-                admin,
-                (
-                    f"{logsFilePath}-{datetime.now().timestamp()}",
-                    open(logsFilePath, "rb"),
-                ),
-            )
-            noFapLogger.info(f"✅ Лог успешно отправлен админу {admin}")
+            with open(logsFilePath, "rb") as log_file:
+                await bot.send_document(admin, (filename, log_file))
             success_count += 1
         except Exception as e:
-            noFapLogger.error(f"❌ Ошибка при отправке лога админу {admin}: {e}")
-            noFapLogger.error(f"❌ Детали ошибки: {type(e).__name__}: {str(e)}")
+            noFapLogger.error(f"❌ Ошибка отправки лога админу {admin}: {e}")
 
-    noFapLogger.info(
-        f"📊 Результат отправки: {success_count}/{total_admins} админов получили лог"
-    )
+    noFapLogger.info(f"📊 Лог отправлен {success_count}/{len(ADMINS)} админам")

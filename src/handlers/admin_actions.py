@@ -4,7 +4,8 @@ from aiogram import types
 
 from commands import commands
 from database import database
-from dispatcher import bot, dp
+from dispatcher import dp
+from logger import noFapLogger
 from src.constants import LOGS_FOLDER
 from src.utils.log_sender import send_logs
 
@@ -109,3 +110,85 @@ async def send_logs_manually(message: types.Message):
 @dp.message_handler(is_admin=False, commands=["get_logs"])
 async def send_logs_no_admin(message: types.Message):
     await message.answer("❌ У вас нет прав администратора для выполнения /get_logs")
+
+
+@dp.message_handler(is_admin=True, commands=["set_log_time"])
+async def set_log_rotation_time(message: types.Message):
+    """Устанавливает время ежедневной ротации и отправки логов"""
+    args = message.get_args()
+
+    if not args:
+        current_time = noFapLogger.get_current_rotation_time()
+        await message.answer(
+            f"⏰ Текущее время ротации логов: {current_time} (МСК)\n\n"
+            f"Использование: /set_log_time ЧЧ:ММ\n"
+            f"Пример: /set_log_time 22:30\n\n"
+            f"📋 Допустимые значения:\n"
+            f"• Час: 00-23\n"
+            f"• Минута: 00-59\n"
+            f"🌍 Время указывается по московскому часовому поясу (МСК)"
+        )
+        return
+
+    # Парсим время из аргументов (формат HH:MM)
+    try:
+        time_parts = args.strip().split(":")
+        if len(time_parts) != 2:
+            raise ValueError("Неверный формат")
+
+        hour = int(time_parts[0])
+        minute = int(time_parts[1])
+
+        # Валидация
+        if not (0 <= hour <= 23):
+            await message.answer(f"❌ Час должен быть от 00 до 23, получен: {hour:02d}")
+            return
+
+        if not (0 <= minute <= 59):
+            await message.answer(
+                f"❌ Минута должна быть от 00 до 59, получена: {minute:02d}"
+            )
+            return
+
+        # Обновляем время
+        if noFapLogger.update_rotation_time(hour, minute):
+            await message.answer(
+                f"✅ Время ротации логов обновлено!\n\n"
+                f"🕐 Новое время: {hour:02d}:{minute:02d} (МСК)\n"
+                f"📤 Логи будут отправляться ежедневно в это время\n"
+                f"🔄 Изменения вступят в силу при следующем запуске бота"
+            )
+        else:
+            await message.answer("❌ Ошибка при обновлении времени ротации логов")
+
+    except ValueError:
+        await message.answer(
+            f"❌ Неверный формат времени!\n\n"
+            f"Используйте формат: ЧЧ:ММ\n"
+            f"Пример: /set_log_time 22:30\n"
+            f"⏰ Время указывается по московскому часовому поясу (МСК)"
+        )
+    except Exception as e:
+        await message.answer(f"❌ Неожиданная ошибка: {e}")
+
+
+@dp.message_handler(is_admin=True, commands=["get_log_time"])
+async def get_log_rotation_time(message: types.Message):
+    """Показывает текущее время ротации логов"""
+    try:
+        current_time = noFapLogger.get_current_rotation_time()
+        await message.answer(
+            f"⏰ Текущее время ротации логов: {current_time} (МСК)\n\n"
+            f"📤 Логи отправляются администраторам ежедневно в это время\n"
+            f"🔧 Для изменения используйте: /set_log_time ЧЧ:ММ\n"
+            f"🌍 Время указывается по московскому часовому поясу"
+        )
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при получении времени ротации: {e}")
+
+
+@dp.message_handler(is_admin=False, commands=["set_log_time", "get_log_time"])
+async def log_time_no_admin(message: types.Message):
+    """Запрет доступа к командам управления временем ротации для не-админов"""
+    command = message.get_command()
+    await message.answer(f"❌ У вас нет прав администратора для выполнения /{command}")
