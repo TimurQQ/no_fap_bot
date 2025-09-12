@@ -6,6 +6,7 @@ from commands import commands
 from database import database
 from dispatcher import dp
 from logger import noFapLogger
+from sheduler import update_logging_schedule
 from src.constants import LOGS_FOLDER
 from src.utils.log_sender import send_logs
 
@@ -150,13 +151,23 @@ async def set_log_rotation_time(message: types.Message):
             )
             return
 
-        # Обновляем время
-        if noFapLogger.update_rotation_time(hour, minute):
+        # Обновляем время в конфигурации и планировщике
+        logger_updated = noFapLogger.update_rotation_time(hour, minute)
+        scheduler_updated = update_logging_schedule(hour, minute)
+
+        if logger_updated and scheduler_updated:
             await message.answer(
                 f"✅ Время ротации логов обновлено!\n\n"
                 f"🕐 Новое время: {hour:02d}:{minute:02d} (МСК)\n"
                 f"📤 Логи будут отправляться ежедневно в это время\n"
-                f"🔄 Изменения вступят в силу при следующем запуске бота"
+                f"⚡ Изменения применены немедленно (без перезапуска)"
+            )
+        elif logger_updated:
+            await message.answer(
+                f"⚠️ Время ротации частично обновлено\n\n"
+                f"✅ Конфигурация обновлена: {hour:02d}:{minute:02d} (МСК)\n"
+                f"❌ Ошибка обновления планировщика\n"
+                f"🔄 Для полного применения требуется перезапуск бота"
             )
         else:
             await message.answer("❌ Ошибка при обновлении времени ротации логов")

@@ -24,9 +24,25 @@ s3_backup_trigger = CronTrigger(
 )  # Полный бэкап (БД + мемы) в S3 каждый день в 22:00
 
 scheduler.add_job(
-    noFapLogger.logDatabase, trigger=logging_trigger, args=(database.data,)
+    noFapLogger.logDatabase,
+    trigger=logging_trigger,
+    args=(database.data,),
+    id="logging_job",
 )
 scheduler.add_job(sendCheckMessageToWinners, trigger=winners_trigger)
 scheduler.add_job(checkRating, trigger=check_rating_trigger)
 scheduler.add_job(clear_problematic_users_cache, trigger=cache_clear_trigger)
 scheduler.add_job(backup_all_to_s3, trigger=s3_backup_trigger)
+
+
+def update_logging_schedule(hour: int, minute: int) -> bool:
+    try:
+        new_trigger = CronTrigger(hour=hour, minute=minute)
+        scheduler.modify_job("logging_job", trigger=new_trigger)
+        noFapLogger.info(
+            f"⏰ Планировщик: время logDatabase обновлено на {hour:02d}:{minute:02d} (МСК)"
+        )
+        return True
+    except Exception as e:
+        noFapLogger.error(f"❌ Ошибка при обновлении времени планировщика: {e}")
+        return False
