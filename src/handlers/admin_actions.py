@@ -6,9 +6,9 @@ from commands import commands
 from database import database
 from dispatcher import dp
 from logger import noFapLogger
-from sheduler import update_logging_schedule
 from src.constants import LOGS_FOLDER
 from src.utils.log_sender import send_logs
+from src.utils.scheduler_manager import update_logging_schedule
 
 
 @dp.message_handler(is_admin=True, commands=["ban"])
